@@ -3,67 +3,88 @@ on:
   workflow_call:
     inputs:
       pre_commit:
-        description: "Run pre-commit."
+        description: >
+          Run pre-commit.
         required: true
         type: string
       unit_tests:
-        description: "Run unit tests"
+        description: >
+          Run unit tests.
         required: true
         type: string
       invocation_tests:
-        description: "Run invocation tests."
+        description: > 
+          Run invocation tests.
         required: true
         type: string
       integration_tests:
-        description: "Run integration-like workflow submission tests."
+        description: >
+          Run integration-like workflow submission tests.
         required: true
         type: string
       unit_test_args:
-        description: "CLI args to pass verbatim to pytest (unit tests)."
+        description: >
+          CLI args to pass verbatim to pytest (unit tests).
         required: false
         type: string
         default: ""
       integration_test_args:
-        description: "CLI args to pass verbatim to pytest (integration tests)."
+        description: >
+          CLI args to pass verbatim to pytest (integration tests).
         required: false
         type: string
         default: ""
       ref:
         required: true
         type: string
-        description: Git commit reference.
+        description: >
+          Git commit reference.
       head-ref:
         required: false
         type: string
-        description: Git HEAD reference (branch name).
+        description: >
+          Git HEAD reference (branch name).
       full-repo-name:
         required: true
         type: string
-        description: Full repository name.
+        description: >
+          Full repository name.
       executable_name:
         required: true
         type: string
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Root name of executable.
       pytest_args:
         required: true
         type: string
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Extra arguments to pass to pytest.
       CLI_path:
         required: true
         type: string
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Path to CLI implementation script.
       CLI_path_win:
         required: true
         type: string
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Windows path to CLI implementation script.
       CLI_module:
         required: true
         type: string
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Python module for CLI implementation.
       app_package:
         required: true
         type: string
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Python package containing application.
       script-branch:
         required: false
         type: string

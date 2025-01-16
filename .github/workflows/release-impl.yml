@@ -14,96 +14,138 @@ on:
       pre_release_branch:
         required: true
         type: string
-        description: "Template parameter: {{ pre_release_branch }}"
+        description: >
+          Template parameter.
+          Name of branch with pre-release code.
       release_branch:
         required: true
         type: string
-        description: "Template parameter: {{ release_branch }}"
+        description: >
+          Template parameter.
+          Name of branch with releases.
       app_name:
         required: true
         type: string
-        description: "Template parameter: {{ app_name }}"
+        description: >
+          Template parameter.
+          Human-readable application name.
       executable_name:
         required: true
         type: string
-        description: "Template parameter: {{ executable_name }}"
+        description: >
+          Template parameter.
+          Root name of executable.
       pyinstaller_dir:
-        required: true
         type: string
-        description: "Template parameter: {{ pyinstalller_dir }}"
+        description: >
+          Template parameter.
+          Name of directory containing pyinstaller configuration, hooks and support files.
+        default: pyinstaller
       version_file:
         required: true
         type: string
-        description: "Template parameter: {{ version_file }}"
+        description: >
+          Template parameter.
+          Path to Python file containing application version data. 
       benchmark_make_workflow:
         required: true
         type: string
-        description: "Template parameter: {{ benchmark_make_workflow }}"
+        description: >
+          Template parameter.
+          Path to application workflow used for benchmarking purposes.
       pypi-url:
         required: true
         type: string
-        description: "Template parameter: {{ PYPI_URL }}"
+        description: >
+          Template parameter.
+          URL to PyPI to use when uploading a release.
       website_source_org:
         required: true
         type: string
-        description: "Template parameter: {{ website_source_org }}"
+        description: >
+          Template parameter.
+          Name of organisation owning the website to publish docs to.
       website_source_repo:
         required: true
         type: string
-        description: "Template parameter: {{ website_source_repo }}"
+        description: >
+          Template parameter.
+          Name of repository to publish the website docs to.
       repository:
         required: true
         type: string
-        description: "Template parameter: {{ org }}/{{ repo }}"
+        description: >
+          Template parameter.
+          Name of organisation/repository containing the code being released.
       docs_url_prefix:
         required: true
         type: string
-        description: "Template parameter: {{ docs_url_prefix }}"
+        description: >
+          Template parameter.
+          Prefix to apply to documentation URL.
       gh-run-attempt:
         required: true
         type: string
-        description: "Attribute: github.run_attempt"
+        description: >
+          Attribute: `github.run_attempt`
+          Which attempt at running the workflow is this?
       pr-merged:
         required: true
         type: string
-        description: "Attribute: github.event.pull_request.merged"
+        description: >
+          Attribute: `github.event.pull_request.merged`
+          Is this running as the result of a PR being merged?
       pr-title:
         required: true
         type: string
-        description: "Attribute: github.event.pull_request.title"
+        description: >
+          Attribute: `github.event.pull_request.title`
+          What is the title of the PR that was merged?
       pr-base-ref:
         required: true
         type: string
-        description: "Attribute: github.event.pull_request.base.ref"
+        description: >
+          Attribute: `github.event.pull_request.base.ref`
+          Where was the PR merged into?
       pr-head-ref:
         required: true
         type: string
-        description: "Attribute: github.event.pull_request.head.ref"
+        description: >
+          Attribute: `github.event.pull_request.head.ref`
+          Where was the PR merged from?
     secrets:
       general-token:
-        description: General github token without special permissions.
+        description: >
+          General github token without special permissions.
         required: true
       commit-token:
-        description: Token for committing to the main repository.
+        description: >
+          Token for committing to the main repository.
         required: true
       pypi-token:
-        description: Token for publishing to PyPI.
+        description: >
+          Token for publishing to PyPI.
         required: true
       website-token:
-        description: Token for publishing the website.
+        description: >
+          Token for publishing the website.
         required: true
     outputs:
       new-version:
-        description: The new version created.
+        description: >
+          The new version created.
         value: ${{ jobs.bump-version.outputs.new_tag }}
       changelog-url:
-        description: URL to the generated CHANGELOG.
+        description: >
+          URL to the generated CHANGELOG.
         value: ${{ jobs.bump-version.outputs.changelog }}
       pypi-published:
-        description: Whether the release was successfully published to PyPI.
+        description: >
+          Whether the release was successfully published to PyPI.
         value: ${{ jobs.release-github-PyPI.outputs.publish-state == 'success' }}
       website-published:
-        description: Whether the release was successfully published to the website.
+        description: >
+          Whether the release was successfully published to the website.
         value: ${{ jobs.update-website.outputs.publish-state == 'success' }}
   
 jobs:
