@@ -69,8 +69,7 @@ on:
         required: true
         description: >
           PAT of user who has permission to bypass branch protection,
-          or standard GITHUB_TOKEN if running on an external fork (won't
-          be able to commit fixes)
+          or standard GITHUB_TOKEN if running on an external fork
   
 # e.g. don't run simultaneously on the same branch (since we may commit to that branch)
 concurrency: ci-${{ inputs.head-ref && format('refs/heads/{0}', inputs.head-ref) || inputs.ref }}
@@ -81,6 +80,10 @@ env:
 
 jobs:
   pre-commit:
+    permissions:
+      # Ensure that this workflow part has permission to write to the PR branch.
+      # It might not be able to skip CI checks in all cases, but at least it can write!
+      contents: write
     runs-on: ubuntu-latest
     if: inputs.pre_commit == 'true'
     steps:
