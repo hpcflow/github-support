@@ -38,14 +38,61 @@ on:
         type: string
         default: ""
       executable_name:
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Root name of executable.
         required: true
         type: string
       pyinstaller_dir:
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Name of directory containing pyinstaller configuration, hooks and support files.
         required: true
         type: string
-
+    outputs:
+      linux-success:
+        description: >
+          Whether we built at least one executable format for CentOS Linux.
+        value: ${{ jobs.linux.outputs.success }}
+      macos-success:
+        description: >
+          Whether we built at least one executable format for macOS.
+        value: ${{ jobs.macos.outputs.success }}
+      windows-success:
+        description: >
+          Whether we built at least one executable format for Windows.
+        value: ${{ jobs.windows.outputs.success }}
+      linux-file-url:
+        description: >
+          Where to download the single-file build for CentOS Linux.
+          This is a temporary URL with access controls applied.
+        value: ${{ jobs.linux.outputs.file }}
+      linux-folder-url:
+        description: >
+          Where to download the folder-based build for CentOS Linux.
+          This is a temporary URL with access controls applied.
+        value: ${{ jobs.linux.outputs.folder }}
+      macos-file-url:
+        description: >
+          Where to download the single-file build for macOS.
+          This is a temporary URL with access controls applied.
+        value: ${{ jobs.macos.outputs.file }}
+      macos-folder-url:
+        description: >
+          Where to download the folder-based build for macOS.
+          This is a temporary URL with access controls applied.
+        value: ${{ jobs.macos.outputs.folder }}
+      windows-file-url:
+        description: >
+          Where to download the single-file build for Windows.
+          This is a temporary URL with access controls applied.
+        value: ${{ jobs.windows.outputs.file }}
+      windows-folder-url:
+        description: >
+          Where to download the folder-based build for Windows.
+          This is a temporary URL with access controls applied.
+        value: ${{ jobs.windows.outputs.folder }}
+            
 jobs:
   status:
     name: Get Git Information
@@ -73,6 +120,10 @@ jobs:
   windows:
     name: Build Windows Executables
     if: inputs.build_windows == 'true'
+    outputs:
+      success: ${{ steps.upload-file.outcome == 'success' || steps.upload-folder.outcome == 'success' }}
+      file: ${{ steps.upload-file.outputs.artifact-url }}
+      folder: ${{ steps.upload-folder.outputs.artifact-url }}
     needs: status
     runs-on: windows-latest
     steps:
@@ -104,6 +155,7 @@ jobs:
         run: ./make.ps1 -ExeName "${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir" -LogLevel ${{ inputs.logLevel }} -BuildType 'onedir'
 
       - name: Upload executable artifact (file)
+        id: upload-file
         if: steps.win_onefile.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -111,6 +163,7 @@ jobs:
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
 
       - name: Upload executable artifact (folder)
+        id: upload-folder
         if: steps.win_onedir.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -158,6 +211,10 @@ jobs:
   macos:
     name: Build macOS Executables
     if: inputs.build_macos == 'true'
+    outputs:
+      success: ${{ steps.upload-file.outcome == 'success' || steps.upload-folder.outcome == 'success' }}
+      file: ${{ steps.upload-file.outputs.artifact-url }}
+      folder: ${{ steps.upload-folder.outputs.artifact-url }}
     needs: status
     runs-on: macos-13
     steps:
@@ -189,6 +246,7 @@ jobs:
         run: ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir ${{ inputs.logLevel }} 'onedir'
 
       - name: Upload executable artifact (file)
+        id: upload-file
         if: steps.mac_onefile.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -196,6 +254,7 @@ jobs:
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
 
       - name: Upload executable artifact (folder)
+        id: upload-folder
         if: steps.mac_onedir.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -243,6 +302,10 @@ jobs:
   linux:
     name: Build Linux (CentOS 7) Executables
     if: inputs.build_linux == 'true'
+    outputs:
+      success: ${{ steps.upload-file.outcome == 'success' || steps.upload-folder.outcome == 'success' }}
+      file: ${{ steps.upload-file.outputs.artifact-url }}
+      folder: ${{ steps.upload-folder.outputs.artifact-url }}
     needs: status
     runs-on: ubuntu-latest
     steps:
@@ -303,6 +366,7 @@ jobs:
             ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test ${{ inputs.unit_test_args }}
 
       - name: Upload executable artifact (file)
+        id: upload-file
         if: steps.linux_onefile.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -310,6 +374,7 @@ jobs:
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
 
       - name: Upload executable artifact (folder)
+        id: upload-folder
         if: steps.linux_onedir.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:

@@ -24,15 +24,25 @@ on:
       executable_name:
         required: true
         type: string
-        description: Template parameter.
+        description: >
+          Template parameter.
+          Root name of executable.
       benchmark_make_workflow:
         required: true
         type: string
-        description: Template parameter
+        description: >
+          Template parameter.
+          Path to application workflow used for benchmarking purposes.
       ref:
         required: true
         type: string
-        description: The github.ref
+        description: The `github.ref` to benchmark.
+    outputs:
+      url:
+        description: >
+          Where you may download the benchmark data from.
+          This is a temporary URL with access controls applied.
+        value: ${{ jobs.upload.outputs.url }}
 
 jobs:
   make:
@@ -66,13 +76,17 @@ jobs:
         id: vars
         run: |
           echo "timeit=benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Run app make workflow command
         run: |
-          poetry run ${{ inputs.executable_name }} --timeit-file $TIMEIT_FILE make ${{ inputs.benchmark_make_workflow }} --var N $N_ELEMS
+          poetry run $EXECUTABLE --timeit-file $TIMEIT_FILE make $BENCHMARK --var N $N_ELEMS
         env:
+          EXECUTABLE: ${{ inputs.executable_name }}
+          BENCHMARK: ${{ inputs.benchmark_make_workflow }}
           TIMEIT_FILE: ${{ steps.vars.outputs.timeit }}
           N_ELEMS: ${{ matrix.num_elements }}
+        shell: bash
 
       - uses: actions/upload-artifact@v4
         with:
@@ -81,6 +95,8 @@ jobs:
 
   upload:
     needs: make
+    outputs:
+      url: ${{ steps.upload.outputs.artifact-url }}
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -90,6 +106,7 @@ jobs:
           merge-multiple: true
           path: benchmarks
       - uses: actions/upload-artifact@v4
+        id: upload
         with:
           name: benchmarks
           path: benchmarks

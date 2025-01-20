@@ -16,3 +16,10 @@ Miscellaneous support pieces for Github Actions.
   * `release-impl` &mdash; Create a release.
   * `test-impl` &mdash; Run the test suite.
   * `test-pre-python-impl` &mdash; Run the test suite with a pre-release version of Python.
+* Support Scripts
+
+  Files used by other parts of this repository, principally for testing purposes.
+  * `get_invoc_cmd.py`
+  * `get_invoc_cmd_interactive.py`
+  * `test_direct_sub_python_script.py`
+  * `test_direct_sub_jupyter_notebook.ipynb`
