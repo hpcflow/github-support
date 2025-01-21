@@ -1,8 +1,5 @@
 name: ⚙️ Benchmark
 
-env:
-  POETRY_VERSION: "1.4"
-
 on:
   workflow_call: # This is a component workflow
     inputs:
@@ -37,6 +34,12 @@ on:
         required: true
         type: string
         description: The `github.ref` to benchmark.
+      poetry-version:
+        required: false
+        type: string
+        default: "1.4"
+        description: >
+          The version of Poetry to use.
     outputs:
       url:
         description: >
@@ -62,7 +65,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: hpcflow/github-support/setup-poetry@0.1
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: benchmark

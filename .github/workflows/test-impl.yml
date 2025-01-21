@@ -90,6 +90,16 @@ on:
         type: string
         description: Which github-support branch to fetch support scripts from.
         default: main
+      python-versions:
+        required: false
+        type: string
+        description: The JSON array of Python versions to test with.
+        default: '["3.9", "3.10", "3.11", "3.12"]'
+      poetry-version:
+        required: false
+        type: string
+        description: Version of Poetry.
+        default: "1.4"
     secrets:
       pre-commit-token:
         required: true
@@ -99,10 +109,6 @@ on:
   
 # e.g. don't run simultaneously on the same branch (since we may commit to that branch)
 concurrency: ci-${{ inputs.head-ref && format('refs/heads/{0}', inputs.head-ref) || inputs.ref }}
-
-env:
-  PYTHON_VERSION_PRE_COMMIT: "3.12"
-  POETRY_VERSION: "1.4"
 
 jobs:
   pre-commit:
@@ -122,7 +128,7 @@ jobs:
       - uses: hpcflow/github-support/configure-git@0.1
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION_PRE_COMMIT }}
+          python-version: "3.12"
 
       - name: pre-commit
         # avoid exit code 1 (which halts GH actions) from pre-commit run command by
@@ -148,11 +154,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+        python-version: ${{ fromJSON(inputs.python-versions) }}
         os:
           - ubuntu-latest
           - macos-13
@@ -166,9 +168,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@main
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: test
@@ -215,11 +217,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+        python-version: ${{ fromJSON(inputs.python-versions) }}
         os:
           - ubuntu-latest
           - macos-13
@@ -233,9 +231,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@main
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: test-integration
@@ -282,11 +280,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+        python-version: ${{ fromJSON(inputs.python-versions) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -299,10 +293,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
-        id: python
+      - uses: hpcflow/github-support/setup-poetry@main
+        id: poetry
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: test-invocation
@@ -317,62 +311,63 @@ jobs:
         id: prep-test-data
         run: |
           echo "exe-path=${PY//python/$EXE_NAME}" >> $GITHUB_OUTPUT
+          mkdir papermill_out
         env:
           EXE_NAME: ${{ inputs.executable_name }}
-          PY: ${{ steps.python.outputs.python-path }}
+          PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python ./${{ inputs.CLI_path }} internal get-invoc-cmd
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python -m ${{ inputs.CLI_module }} internal get-invoc-cmd
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: ${{ inputs.executable_name }} internal get-invoc-cmd
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
 
       - name: Test invocation command within a python script
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python github-support/scripts/get_invoc_cmd.py ${{ inputs.app_package }}
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with interactive python
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python github-support/scripts/get_invoc_cmd_interactive.py python ${{ inputs.app_package }}
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with interactive ipython
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python github-support/scripts/get_invoc_cmd_interactive.py ipython ${{ inputs.app_package }}
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test direct workflow submission within a python script
         run: |
-          source $(poetry env info --path)/bin/activate
+          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           python github-support/scripts/test_direct_sub_python_script.py ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a Jupyter notebook (via papermill)
         run: |
-          source $(poetry env info --path)/bin/activate
+          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           python -m ipykernel install --user --name python3
-          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb github-support/scripts/test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
+          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb papermill_out/test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
 
   test-invocation-macos:
     if: inputs.invocation_tests == 'true'
@@ -380,11 +375,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+        python-version: ${{ fromJSON(inputs.python-versions) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -397,10 +388,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
-        id: python
+      - uses: hpcflow/github-support/setup-poetry@main
+        id: poetry
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: test-invocation
@@ -415,62 +406,63 @@ jobs:
         id: prep-test-data
         run: |
           echo "exe-path=${PY//python/$EXE_NAME}" >> $GITHUB_OUTPUT
+          mkdir papermill_out
         env:
           EXE_NAME: ${{ inputs.executable_name }}
-          PY: ${{ steps.python.outputs.python-path }}
+          PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python ./${{ inputs.CLI_path }} internal get-invoc-cmd
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python -m ${{ inputs.CLI_module }} internal get-invoc-cmd
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: ${{ inputs.executable_name }} internal get-invoc-cmd
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
 
       - name: Test invocation command within a python script
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python github-support/scripts/get_invoc_cmd.py ${{ inputs.app_package }}
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with interactive python
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python github-support/scripts/get_invoc_cmd_interactive.py python ${{ inputs.app_package }}
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test invocation command with interactive ipython
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: source $(poetry env info --path)/bin/activate
+          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           command: python github-support/scripts/get_invoc_cmd_interactive.py ipython ${{ inputs.app_package }}
-          expected: "('${{ steps.python.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+          expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
 
       - name: Test direct workflow submission within a python script
         run: |
-          source $(poetry env info --path)/bin/activate
+          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           python github-support/scripts/test_direct_sub_python_script.py ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a Jupyter notebook (via papermill)
         run: |
-          source $(poetry env info --path)/bin/activate
+          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
           python -m ipykernel install --user --name python3
-          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb github-support/scripts/test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
+          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb papermill_out/test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
 
   test-invocation-windows:
     if: inputs.invocation_tests == 'true'
@@ -478,11 +470,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+        python-version: ${{ fromJSON(inputs.python-versions) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -495,10 +483,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@main
         id: poetry
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: test-invocation
@@ -514,6 +502,7 @@ jobs:
           ("python-path=" + $Env:PY.Replace('\', '\\')) | Out-File $Env:GITHUB_OUTPUT -Append
           ("cli-path=$Env:GITHUB_WORKSPACE\$Env:CLI_PATH".Replace('\', '\\')) | Out-File $Env:GITHUB_OUTPUT -Append
           ("exe-path=$Env:PY".Replace('python.exe', $Env:EXE_NAME).Replace('\', '\\')) | Out-File $Env:GITHUB_OUTPUT -Append
+          New-Item -ItemType Directory -Path papermill_out
         env:
           CLI_PATH: ${{ inputs.CLI_path_win }}
           EXE_NAME: ${{ inputs.executable_name }}
@@ -522,38 +511,38 @@ jobs:
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: ."$(poetry env info --path)\Scripts\activate.ps1"
+          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
           command: python ./${{ inputs.CLI_path }} internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: ."$(poetry env info --path)\Scripts\activate.ps1"
+          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
           command: python -m ${{ inputs.CLI_module }} internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: ."$(poetry env info --path)\Scripts\activate.ps1"
+          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
           command: ${{ inputs.executable_name }} internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
 
       - name: Test invocation command within a python script
         uses: hpcflow/github-support/compare@0.1
         with:
-          init: ."$(poetry env info --path)\Scripts\activate.ps1"
+          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
           command: python github-support\scripts\get_invoc_cmd.py ${{ inputs.app_package }}
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
 
       - name: Test direct workflow submission within a python script
         run: |
-          ."$(poetry env info --path)\Scripts\activate.ps1"
+          ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
           python github-support\scripts\test_direct_sub_python_script.py ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a Jupyter notebook (via papermill)
         run: |
-          ."$(poetry env info --path)\Scripts\activate.ps1"
+          ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
           python -m ipykernel install --user --name python3
-          papermill github-support\scripts\test_direct_sub_jupyter_notebook.ipynb github-support\scripts\test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
+          papermill github-support\scripts\test_direct_sub_jupyter_notebook.ipynb papermill_out\test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}

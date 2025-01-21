@@ -1,13 +1,5 @@
 name: ⚙️ Release
 
-env:
-  PYTHON_VERSION_BUMP: "3.12"
-  PYTHON_VERSION_BUILD_EXES: "3.12"
-  PYTHON_VERSION_RELEASE: "3.12"
-  PYTHON_VERSION_BUILD_DOCS: "3.12"
-  PYTHON_VERSION_UPDATE_WEB: "3.12"
-  POETRY_VERSION: "1.4"
-
 on:
   workflow_call:
     inputs:
@@ -113,6 +105,20 @@ on:
         description: >
           Attribute: `github.event.pull_request.head.ref`
           Where was the PR merged from?
+      python-version:
+        description: >
+          Version of Python to use.
+          Note that the version in CentOS is locked by the Docker image.
+        type: string
+        required: false
+        default: "3.12"
+      poetry-version:
+        description: >
+          Version of Poetry to use.
+          Note that the version in CentOS is locked by the Docker image.
+        type: string
+        required: false
+        default: "1.4"
     secrets:
       general-token:
         description: >
@@ -166,7 +172,7 @@ jobs:
       - uses: hpcflow/github-support/configure-git@0.1
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION_BUMP }}
+          python-version: ${{ inputs.python-version }}
 
       - name: Get git-chglog executable
         run: |
@@ -299,14 +305,14 @@ jobs:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION_BUILD_EXES }}
+          python-version: ${{ inputs.python-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: build
-          version: ${{ env.PYTHON_VERSION_BUILD_EXES }}
+          version: ${{ inputs.python-version }}
       - uses: hpcflow/github-support/setup-poetry@0.1
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
 
       - name: Install dependencies
         run: poetry install --without dev
@@ -391,7 +397,7 @@ jobs:
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: build
-          version: ${{ env.PYTHON_VERSION_BUILD_EXES }}
+          version: ${{ inputs.python-version }}
 
       - name: Build executables within Docker
         uses: addnab/docker-run-action@v3
@@ -478,7 +484,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: hpcflow/github-support/setup-poetry@0.1
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: benchmark
@@ -540,14 +546,14 @@ jobs:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION_RELEASE }}
+          python-version: ${{ inputs.python-version }}
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: release
-          version: ${{ env.PYTHON_VERSION_RELEASE }}
+          version: ${{ inputs.python-version }}
       - uses: hpcflow/github-support/setup-poetry@0.1
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
 
       - name: Install dependencies
         run: poetry install --without dev,pyinstaller
@@ -622,7 +628,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION_BUILD_DOCS }}
+          python-version: ${{ inputs.python-version }}
 
       - name: Write binary links YAML file and push
         run: |
@@ -649,10 +655,10 @@ jobs:
       - uses: hpcflow/github-support/init-cache@0.1
         with:
           name: release-doc
-          version: ${{ env.PYTHON_VERSION_BUILD_DOCS }}
+          version: ${{ inputs.python-version }}
       - uses: hpcflow/github-support/setup-poetry@0.1
         with:
-          version: ${{ env.POETRY_VERSION }}
+          version: ${{ inputs.poetry-version }}
 
       - name: Install dependencies
         run: poetry install --without test,pyinstaller
@@ -677,7 +683,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION_UPDATE_WEB }}
+          python-version: ${{ inputs.python-version }}
 
       - uses: actions/checkout@v4
         with:

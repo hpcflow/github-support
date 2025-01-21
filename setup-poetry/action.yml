@@ -19,7 +19,9 @@ runs:
         python -m pip install poetry==$VERSION
         poetry config virtualenvs.in-project true
         poetry config installer.modern-installation false
+        POETRY_PATH=$(poetry env info --path)
         echo "python=${GITHUB_WORKSPACE}${SEP}.venv${SEP}${LOC}${SEP}python${SUFFIX}" >> $GITHUB_OUTPUT
+        echo "poetry-path=$(POETRY_PATH)" >> $GITHUB_OUTPUT
       env:
         VERSION: ${{ inputs.version }}
         SEP: ${{ runner.os == 'Windows' && '\' || '/' }}
