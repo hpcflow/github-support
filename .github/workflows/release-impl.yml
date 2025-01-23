@@ -169,7 +169,7 @@ jobs:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }}
           token: ${{ secrets.commit-token }}
-      - uses: hpcflow/github-support/configure-git@0.1
+      - uses: hpcflow/github-support/configure-git@0.2
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
@@ -306,11 +306,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/init-cache@0.1
+      - uses: hpcflow/github-support/init-cache@0.2
         with:
           name: build
           version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@0.2
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -346,13 +346,13 @@ jobs:
           TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir
 
       - name: Version check (file)
-        uses: hpcflow/github-support/compare@0.1
+        uses: hpcflow/github-support/compare@0.2
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
           command: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }} --version
 
       - name: Version check (folder)
-        uses: hpcflow/github-support/compare@0.1
+        uses: hpcflow/github-support/compare@0.2
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
           command: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir${{ matrix.executable_ext }} --version
@@ -394,7 +394,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
-      - uses: hpcflow/github-support/init-cache@0.1
+      - uses: hpcflow/github-support/init-cache@0.2
         with:
           name: build
           version: ${{ inputs.python-version }}
@@ -482,10 +482,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@0.2
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@0.1
+      - uses: hpcflow/github-support/init-cache@0.2
         with:
           name: benchmark
           version: ${{ matrix.python-version }}
@@ -547,11 +547,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/init-cache@0.1
+      - uses: hpcflow/github-support/init-cache@0.2
         with:
           name: release
           version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@0.2
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -624,7 +624,7 @@ jobs:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
           token: ${{ secrets.commit-token }}
 
-      - uses: hpcflow/github-support/configure-git@0.1
+      - uses: hpcflow/github-support/configure-git@0.2
 
       - uses: actions/setup-python@v5
         with:
@@ -652,11 +652,11 @@ jobs:
             echo "No ${{ inputs.pre_release_branch }} branch to merge into."
           fi
 
-      - uses: hpcflow/github-support/init-cache@0.1
+      - uses: hpcflow/github-support/init-cache@0.2
         with:
           name: release-doc
           version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@0.2
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -690,7 +690,7 @@ jobs:
           repository: ${{ inputs.website_source_org }}/${{ inputs.website_source_repo }}
           token: ${{ secrets.website-token }}
 
-      - uses: hpcflow/github-support/configure-git@0.1
+      - uses: hpcflow/github-support/configure-git@0.2
 
       - name: Download documentation artifact
         uses: actions/download-artifact@v4

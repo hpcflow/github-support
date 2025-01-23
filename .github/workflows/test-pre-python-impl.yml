@@ -52,11 +52,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
-      - uses: hpcflow/github-support/init-cache@0.1
+      - uses: hpcflow/github-support/init-cache@0.2
         with:
           name: test
           version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.1
+      - uses: hpcflow/github-support/setup-poetry@0.2
         with:
           version: ${{ inputs.poetry-version }}
 
