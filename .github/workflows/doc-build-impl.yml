@@ -1,0 +1,161 @@
+name: ⚙️ Documentation test build
+
+on:
+  workflow_call: # This is a component workflow
+    inputs:
+      python-version:
+        description: Version of Python to use to build the documentation.
+        required: false
+        type: string
+        default: "3.12"
+      poetry-version:
+        description: Version of Poetry to use to manage dependencies.
+        required: false
+        type: string
+        default: "1.4"
+      script-branch:
+        description: Which github-support branch to fetch support scripts from.
+        required: false
+        type: string
+        default: main
+      artifact-root-name:
+        description: >
+          Root name of the documentation artifact to produce.
+          Typically `hpcflow` or `matflow`.
+        required: true
+        type: string
+      ref:
+        description: >
+          The SHA ID of the version to build.
+          Typically the `github.sha`.
+        required: true
+        type: string
+      install-args:
+        description: Arguments to pass to the installer.
+        type: string
+        required: false
+        default: ""
+      sphinx-args:
+        description: Arguments to pass to Sphinx.
+        type: string
+        required: false
+        default: ""
+      artifact-lifespan:
+        description: How long the artifact should be live for, in days.
+        type: number
+        required: false
+        default: 7
+      deploy:
+        # Disabled by default for now
+        description: >
+          Whether to push the build documentation to the deployment environment.
+          Note that creating the deployment environment is a GitHub project
+          administrative action.
+        type: boolean
+        required: false
+        default: false
+      deployment-environment:
+        description: >
+          Name of target deployment environment.
+          Note that creating the deployment environment is a GitHub project
+          administrative action.
+        type: string
+        required: false
+        default: github-pages
+    outputs:
+      artifact-name:
+        description: The name of the generated artifact. Contains the commit ref ID.
+        value: ${{ jobs.sphinx.outputs.artifact-name }}
+      artifact-url:
+        description: >
+          Where to download the generated artifact from.
+          Requires a GitHub token (typically obtained by logging in) to download.
+        value: ${{ jobs.sphinx.outputs.artifact-url }}
+      page-url:
+        description: >
+          Where the documentation has been deployed to.
+        value: ${{ jobs.deploy.outputs.page-url }}
+
+jobs:
+  sphinx:
+    # Note that we only do this on one platform and with one Python version
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
+      artifact-url: ${{ steps.upload.outputs.artifact-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Checkout support code
+        uses: actions/checkout@v4
+        with:
+          repository: hpcflow/github-support
+          path: github-support
+          ref: ${{ inputs.script-branch }}
+      - name: Init Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Install and configure poetry ${{ inputs.poetry-version }}
+        uses: hpcflow/github-support/setup-poetry@0.2
+        with:
+          version: ${{ inputs.poetry-version }}
+      - name: Cache Virtual Environment
+        uses: hpcflow/github-support/init-cache@0.2
+        with:
+          name: sphinx
+          version: ${{ inputs.python-version }}
+      - name: Install Dependencies
+        run: |
+          poetry install ${{ inputs.install-args }}
+      - name: Configure Problem Matcher
+        run: echo "::add-matcher::github-support/problem-matchers/sphinx.json"
+        # See: https://github.com/actions/toolkit/blob/main/docs/problem-matchers.md
+        # See: https://github.com/python/cpython/pull/20325
+      - name: Run Sphinx
+        run: |
+          poetry run make clean html ${{ inputs.sphinx-args }}
+        working-directory: docs
+      - name: Upload documentation artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
+          path: docs/build/html
+          if-no-files-found: error
+
+  deploy:
+    # New style doc uploader
+    if: ${{ inputs.deploy }}
+    needs: sphinx
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: ${{ inputs.deployment-environment }}
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page-url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: site
+          merge-multiple: true
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact to documentation staging
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload dist repository
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
