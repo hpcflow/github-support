@@ -17,7 +17,7 @@ runs:
       id: ver
       run: |
         pipx install poetry==$VERSION
-        python -c 'import sys; print("py={sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")' >> $GITHUB_OUTPUT
+        python -c 'import sys; print(f"py={sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")' >> $GITHUB_OUTPUT
       env:
         VERSION: ${{ inputs.version }}
     - uses: actions/setup-python@v5
