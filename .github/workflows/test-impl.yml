@@ -159,7 +159,9 @@ jobs:
           - ubuntu-latest
           - macos-13
           - windows-latest
-
+    permissions:
+      # No write permission
+      contents: read
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -190,6 +192,9 @@ jobs:
     needs: pre-commit
     runs-on: ubuntu-latest
     if: inputs.unit_tests == 'true'
+    permissions:
+      # No write permission
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -222,7 +227,9 @@ jobs:
           - ubuntu-latest
           - macos-13
           - windows-latest
-
+    permissions:
+      # No write permission
+      contents: read
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -253,6 +260,9 @@ jobs:
     needs: pre-commit
     runs-on: ubuntu-latest
     if: inputs.integration_tests == 'true'
+    permissions:
+      # No write permission
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -281,6 +291,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJSON(inputs.python-versions) }}
+    permissions:
+      # No write permission
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -376,6 +389,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJSON(inputs.python-versions) }}
+    permissions:
+      # No write permission
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -471,6 +487,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJSON(inputs.python-versions) }}
+    permissions:
+      # No write permission
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
