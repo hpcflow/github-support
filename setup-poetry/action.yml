@@ -29,9 +29,7 @@ runs:
       run: |
         poetry config virtualenvs.in-project true
         poetry config installer.modern-installation false
-        POETRY_PATH=$(poetry env info --path)
-        echo "python=${GITHUB_WORKSPACE}${SEP}.venv${SEP}${LOC}${SEP}python${SUFFIX}" >> $GITHUB_OUTPUT
-        echo "poetry-path=$(POETRY_PATH)" >> $GITHUB_OUTPUT
+        poetry run python -c 'import sys;print(f"python={sys.executable}\npoetry-path={sys.prefix}")' >> $GITHUB_OUTPUT
       env:
         SEP: ${{ runner.os == 'Windows' && '\' || '/' }}
         LOC: ${{ runner.os == 'Windows' && 'Scripts' || 'bin' }}
