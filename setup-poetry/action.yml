@@ -40,8 +40,12 @@ runs:
       run: |
         poetry config virtualenvs.in-project true
         poetry config installer.modern-installation false
+        if [ "$ON_WIN" = "yes" ]; then
+          poetry config installer.max-workers 1
+        fi
         poetry run python $GITHUB_ACTION_PATH/paths.py >> $GITHUB_OUTPUT
       env:
         SEP: ${{ runner.os == 'Windows' && '\' || '/' }}
         LOC: ${{ runner.os == 'Windows' && 'Scripts' || 'bin' }}
         SUFFIX: ${{ runner.os == 'Windows' && '.exe' || '' }}
+        ON_WIN: ${{ runner.os == 'Windows' && 'yes' || 'no' }}
