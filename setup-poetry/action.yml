@@ -9,6 +9,9 @@ outputs:
   python-path:
     description: The path to Python in the virtual environment.
     value: ${{ steps.code.outputs.python }}
+  poetry-path:
+    description: The path to the Poetry environment root.
+    value: ${{ steps.code.outputs.poetry }}
 
 runs:
   using: composite
