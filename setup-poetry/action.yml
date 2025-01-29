@@ -17,19 +17,19 @@ runs:
       id: ver
       run: |
         pipx install poetry==$VERSION
-        python -c 'import sys; print(f"py={sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")' >> $GITHUB_OUTPUT
+        python ${{ github.action_path }}/ver.py >> $GITHUB_OUTPUT
       env:
         VERSION: ${{ inputs.version }}
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ steps.ver.outputs.py }}
-        cache: 'poetry'
+        cache: poetry
     - shell: bash
       id: code
       run: |
         poetry config virtualenvs.in-project true
         poetry config installer.modern-installation false
-        poetry run python -c 'import sys;print(f"python={sys.executable}\npoetry-path={sys.prefix}")' >> $GITHUB_OUTPUT
+        poetry run python ${{ github.action_path }}/paths.py >> $GITHUB_OUTPUT
       env:
         SEP: ${{ runner.os == 'Windows' && '\' || '/' }}
         LOC: ${{ runner.os == 'Windows' && 'Scripts' || 'bin' }}
