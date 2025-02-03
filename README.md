@@ -13,13 +13,15 @@ Miscellaneous support pieces for Github Actions.
   Implementations of templated workflows, separating the templating from what the workflows do.
   * `benchmark-impl` &mdash; Benchmark workflow performance.
   * `build-exes-impl` &mdash; Build executables.
+  * `doc-build-impl` &mdash; Build documentation *for one version*.
   * `release-impl` &mdash; Create a release.
   * `test-impl` &mdash; Run the test suite.
   * `test-pre-python-impl` &mdash; Run the test suite with a pre-release version of Python.
-* Support Scripts
+* Support Scripts/Files
 
   Files used by other parts of this repository, principally for testing purposes.
-  * `get_invoc_cmd.py`
-  * `get_invoc_cmd_interactive.py`
-  * `test_direct_sub_python_script.py`
-  * `test_direct_sub_jupyter_notebook.ipynb`
+  * `problem-matchers/sphinx.json`
+  * `scripts/get_invoc_cmd.py`
+  * `scripts/get_invoc_cmd_interactive.py`
+  * `scripts/test_direct_sub_python_script.py`
+  * `scripts/test_direct_sub_jupyter_notebook.ipynb`
