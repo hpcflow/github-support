@@ -16,6 +16,11 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Upgrade pip
+      shell: bash
+      run: |
+        python -m pip install -U pip setuptools wheel
+        echo PIP_DISABLE_PIP_VERSION_CHECK=1 >> $GITHUB_ENV
     - name: Install
       shell: bash
       run: |
