@@ -56,7 +56,7 @@ jobs:
         with:
           name: test
           version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.2
+      - uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
 
