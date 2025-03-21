@@ -310,7 +310,7 @@ jobs:
         with:
           name: build
           version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.2
+      - uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -482,7 +482,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.2
+      - uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
       - uses: hpcflow/github-support/init-cache@0.2
@@ -551,7 +551,7 @@ jobs:
         with:
           name: release
           version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.2
+      - uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -656,7 +656,7 @@ jobs:
         with:
           name: release-doc
           version: ${{ inputs.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.2
+      - uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
 
