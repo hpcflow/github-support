@@ -66,7 +66,7 @@ jobs:
       - uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@0.2
+      - uses: hpcflow/github-support/init-cache@0.3
         with:
           name: benchmark
           version: ${{ matrix.python-version }}
