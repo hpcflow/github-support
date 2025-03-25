@@ -52,7 +52,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
-      - uses: hpcflow/github-support/init-cache@0.2
+      - uses: hpcflow/github-support/init-cache@0.3
         with:
           name: test
           version: ${{ matrix.python-version }}
