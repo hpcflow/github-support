@@ -224,7 +224,7 @@ jobs:
           NEW_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           echo "NEW_TAG is: $NEW_TAG"
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
-          echo "version=${tag:1}" >> $GITHUB_OUTPUT
+          echo "version=${NEW_TAG:1}" >> $GITHUB_OUTPUT
 
       - name: Generate CHANGELOG (stable release)
         if: inputs.pr-base-ref == inputs.release_branch
