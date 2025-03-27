@@ -282,7 +282,7 @@ jobs:
             poetry config virtualenvs.in-project true
             poetry config installer.modern-installation false
             poetry install --without dev,pyinstaller
-            poetry run hpcflow test --integration ${{ inputs.integration_test_args }}
+            poetry run ${{ inputs.executable_name }} test --integration ${{ inputs.integration_test_args }}
 
   test-invocation-ubuntu:
     if: inputs.invocation_tests == 'true'
