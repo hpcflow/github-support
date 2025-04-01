@@ -118,19 +118,23 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     if: inputs.pre_commit == 'true'
+    timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.pre-commit-token }}
           # checkout PR source branch (head_ref) if event is pull_request:
           ref: ${{ inputs.head-ref || inputs.ref }}
           repository: ${{ inputs.full-repo-name }}
-      - uses: hpcflow/github-support/configure-git@main
-      - uses: actions/setup-python@v5
+      - name: Configure git for commits
+        uses: hpcflow/github-support/configure-git@main
+      - name: Set up python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: pre-commit
+      - name: Run pre-commit
         # avoid exit code 1 (which halts GH actions) from pre-commit run command by
         # running twice:
         run: |
@@ -164,25 +168,32 @@ jobs:
       contents: read
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/setup-python@v5
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@main
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@main
+        timeout-minutes: 5
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@main
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
         with:
           name: test
           version: ${{ matrix.python-version }}
 
       - name: Install dependencies
+        timeout-minutes: 5
         run: |
           poetry install --without dev,pyinstaller
 
       - name: Run tests
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -197,10 +208,12 @@ jobs:
       # No write permission
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: hpcflow/github-support/init-cache@main
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
         with:
           name: test
           version: CentOS
@@ -217,6 +230,7 @@ jobs:
             poetry install --without dev,pyinstaller
             export PYTHONUNBUFFERED=ok
             poetry run python -m pytest ${{ inputs.unit_test_args }}
+        timeout-minutes: 5
 
   test-integration:
     needs: pre-commit
@@ -234,25 +248,31 @@ jobs:
       contents: read
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/setup-python@v5
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@main
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@main
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@main
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
         with:
           name: test-integration
           version: ${{ matrix.python-version }}
 
       - name: Install dependencies
+        timeout-minutes: 5
         run: |
           poetry install --without dev,pyinstaller
 
       - name: Run integration tests
+        timeout-minutes: 25
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -267,10 +287,12 @@ jobs:
       # No write permission
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: hpcflow/github-support/init-cache@main
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
         with:
           name: test-integration
           version: CentOS
@@ -287,6 +309,7 @@ jobs:
             poetry install --without dev,pyinstaller
             export PYTHONUNBUFFERED=ok
             poetry run ${{ inputs.executable_name }} test --integration ${{ inputs.integration_test_args }}
+        timeout-minutes: 25
 
   test-invocation-ubuntu:
     if: inputs.invocation_tests == 'true'
@@ -299,22 +322,27 @@ jobs:
       # No write permission
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/checkout@v4
+      - name: Checkout supporting test infrastructure
+        uses: actions/checkout@v4
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
-      - uses: actions/setup-python@v5
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@main
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@main
         id: poetry
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@main
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -323,6 +351,7 @@ jobs:
         run: |
           poetry install --without dev,pyinstaller
           poetry run pip install ipython
+        timeout-minutes: 5
 
       - name: Prepare test data
         id: prep-test-data
@@ -397,22 +426,27 @@ jobs:
       # No write permission
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/checkout@v4
+      - name: Checkout supporting test infrastructure
+        uses: actions/checkout@v4
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
-      - uses: actions/setup-python@v5
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@main
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@main
         id: poetry
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@main
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -421,6 +455,7 @@ jobs:
         run: |
           poetry install --without dev,pyinstaller
           poetry run pip install ipython
+        timeout-minutes: 5
 
       - name: Prepare test data
         id: prep-test-data
@@ -495,22 +530,27 @@ jobs:
       # No write permission
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/checkout@v4
+      - name: Checkout supporting test infrastructure
+        uses: actions/checkout@v4
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
-      - uses: actions/setup-python@v5
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@main
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@main
         id: poetry
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@main
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -518,6 +558,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --without dev,pyinstaller
+        timeout-minutes: 5
 
       - name: Prepare test data
         id: prep-test-data
