@@ -100,6 +100,26 @@ on:
         type: string
         description: Version of Poetry.
         default: "1.4"
+      install-timeout-minutes:
+        required: false
+        type: number
+        description: Time to allow for a workflow to install dependencies.
+        default: 5
+      install-poetry-timeout-minutes:
+        required: false
+        type: number
+        description: Time to allow for a workflow to install poetry.
+        default: 5
+      unit-test-timeout-minutes:
+        required: false
+        type: number
+        description: Time to allow for a workflow to run unit tests.
+        default: 5
+      integration-test-timeout-minutes:
+        required: false
+        type: number
+        description: Time to allow for a workflow to run integration tests.
+        default: 5
     secrets:
       pre-commit-token:
         required: true
@@ -178,7 +198,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
@@ -188,12 +208,12 @@ jobs:
           version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.install-timeout-minutes }}
         run: |
           poetry install --without dev,pyinstaller
 
       - name: Run tests
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -230,7 +250,7 @@ jobs:
             poetry install --without dev,pyinstaller
             export PYTHONUNBUFFERED=ok
             poetry run python -m pytest ${{ inputs.unit_test_args }}
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
 
   test-integration:
     needs: pre-commit
@@ -258,6 +278,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
+        timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
@@ -267,12 +288,12 @@ jobs:
           version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.install-timeout-minutes }}
         run: |
           poetry install --without dev,pyinstaller
 
       - name: Run integration tests
-        timeout-minutes: 25
+        timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -309,7 +330,7 @@ jobs:
             poetry install --without dev,pyinstaller
             export PYTHONUNBUFFERED=ok
             poetry run ${{ inputs.executable_name }} test --integration ${{ inputs.integration_test_args }}
-        timeout-minutes: 25
+        timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}
 
   test-invocation-ubuntu:
     if: inputs.invocation_tests == 'true'
@@ -339,6 +360,7 @@ jobs:
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
         id: poetry
+        timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
@@ -351,7 +373,7 @@ jobs:
         run: |
           poetry install --without dev,pyinstaller
           poetry run pip install ipython
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.install-timeout-minutes }}
 
       - name: Prepare test data
         id: prep-test-data
@@ -443,6 +465,7 @@ jobs:
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
         id: poetry
+        timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
@@ -455,7 +478,7 @@ jobs:
         run: |
           poetry install --without dev,pyinstaller
           poetry run pip install ipython
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.install-timeout-minutes }}
 
       - name: Prepare test data
         id: prep-test-data
@@ -547,6 +570,7 @@ jobs:
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
         id: poetry
+        timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
@@ -558,7 +582,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --without dev,pyinstaller
-        timeout-minutes: 5
+        timeout-minutes: ${{ inputs.install-timeout-minutes }}
 
       - name: Prepare test data
         id: prep-test-data
