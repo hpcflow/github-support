@@ -119,7 +119,7 @@ on:
         required: false
         type: number
         description: Time to allow for a workflow to run integration tests.
-        default: 5
+        default: 25
     secrets:
       pre-commit-token:
         required: true
