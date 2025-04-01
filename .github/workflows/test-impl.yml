@@ -185,6 +185,7 @@ jobs:
       - name: Run tests
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
         run: |
           poetry run python -m pytest ${{ inputs.pytest_args }} ${{ inputs.unit_test_args }}
 
@@ -214,6 +215,7 @@ jobs:
             poetry config virtualenvs.in-project true
             poetry config installer.modern-installation false
             poetry install --without dev,pyinstaller
+            export PYTHONUNBUFFERED=ok
             poetry run python -m pytest ${{ inputs.unit_test_args }}
 
   test-integration:
@@ -250,9 +252,10 @@ jobs:
         run: |
           poetry install --without dev,pyinstaller
 
-      - name: Run tests
+      - name: Run integration tests
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
         run: |
           poetry run ${{ inputs.executable_name }} test ${{ inputs.pytest_args }} --integration ${{ inputs.integration_test_args }}
 
@@ -282,6 +285,7 @@ jobs:
             poetry config virtualenvs.in-project true
             poetry config installer.modern-installation false
             poetry install --without dev,pyinstaller
+            export PYTHONUNBUFFERED=ok
             poetry run ${{ inputs.executable_name }} test --integration ${{ inputs.integration_test_args }}
 
   test-invocation-ubuntu:

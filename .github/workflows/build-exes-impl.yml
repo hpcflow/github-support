@@ -208,6 +208,7 @@ jobs:
         if: steps.win_onefile.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
         run: |
           ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test ${{ inputs.unit_test_args }}
 
@@ -215,6 +216,7 @@ jobs:
         if: steps.win_onedir.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
         run: |
           ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test ${{ inputs.unit_test_args }}
 
@@ -299,6 +301,7 @@ jobs:
         if: steps.mac_onefile.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
         run: |
           ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test ${{ inputs.unit_test_args }}
 
@@ -306,6 +309,7 @@ jobs:
         if: steps.mac_onedir.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
         run: |
           ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir test ${{ inputs.unit_test_args }}
 
@@ -347,6 +351,7 @@ jobs:
             # set demo data GitHub URL using current git SHA (file), instead of default which is current version tag
             ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
 
+            export PYTHONUNBUFFERED=ok
             # run test suite on the frozen app (file)
             ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.unit_test_args }}
 
@@ -372,6 +377,7 @@ jobs:
             # set demo data GitHub URL using current git SHA (folder), instead of default which is current version tag
             ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
 
+            export PYTHONUNBUFFERED=ok
             # run test suite on the frozen app (folder)
             ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test ${{ inputs.unit_test_args }}
 

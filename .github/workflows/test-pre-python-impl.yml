@@ -67,3 +67,5 @@ jobs:
       - name: Run tests
         run: |
           poetry run python -m pytest ${{ inputs.pytest-args }}
+        env:
+          PYTHONUNBUFFERED: ok
