@@ -57,16 +57,20 @@ jobs:
         num_elements: ${{ fromJSON(inputs.num_elements)}}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/setup-python@v5
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.3
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
-      - uses: hpcflow/github-support/init-cache@0.3
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@0.3
         with:
           name: benchmark
           version: ${{ matrix.python-version }}
@@ -91,10 +95,12 @@ jobs:
           N_ELEMS: ${{ matrix.num_elements }}
         shell: bash
 
-      - uses: actions/upload-artifact@v4
+      - name: Store benchmark file
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.vars.outputs.timeit }}
           path: ${{ steps.vars.outputs.timeit }}
+          retention-days: 1
 
   upload:
     needs: make
@@ -102,13 +108,16 @@ jobs:
       url: ${{ steps.upload.outputs.artifact-url }}
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Make directory
+        run: |
           mkdir benchmarks
-      - uses: actions/download-artifact@v4
+      - name: Fetch benchmark files
+        uses: actions/download-artifact@v4
         with:
           merge-multiple: true
           path: benchmarks
-      - uses: actions/upload-artifact@v4
+      - name: Store benchmark data archive
+        uses: actions/upload-artifact@v4
         id: upload
         with:
           name: benchmarks

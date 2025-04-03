@@ -45,18 +45,22 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/setup-python@v5
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
-      - uses: hpcflow/github-support/init-cache@0.3
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@0.3
         with:
           name: test
           version: ${{ matrix.python-version }}
-      - uses: hpcflow/github-support/setup-poetry@0.3
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@0.3
         with:
           version: ${{ inputs.poetry-version }}
 
