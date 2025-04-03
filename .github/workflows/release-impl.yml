@@ -281,7 +281,7 @@ jobs:
         env:
           new_tag: ${{ steps.new_tag.outputs.tag }}
 
-      - name: Store the imcremental CHANGELOG
+      - name: Store the incremental CHANGELOG
         uses: actions/upload-artifact@v4
         id: upload-changelog
         with:
