@@ -157,7 +157,7 @@ on:
 jobs:
   bump-version:
     # skip if trying to re-run; PR is closed without merging; '[skip release]' is in the PR title; or if merging any branch other than pre_release_branch into release_branch
-    if: inputs.gh-run-attempt == '1' && inputs.pr-merged == true && !contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch))
+    if: inputs.gh-run-attempt == '1' && inputs.pr-merged == 'true' && !contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch))
     runs-on: ubuntu-latest
     outputs:
       new_tag: ${{ steps.new_tag.outputs.tag }}
