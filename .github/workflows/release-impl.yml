@@ -293,9 +293,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, macos-13]
+        os: [windows-latest, macos-13]
         include:
-          - os: windows-2019
+          - os: windows-latest
             executable_ext: .exe
             executable_os: win
           - os: macos-13
