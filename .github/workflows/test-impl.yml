@@ -94,7 +94,12 @@ on:
         required: false
         type: string
         description: The JSON array of Python versions to test with.
-        default: '["3.9", "3.10", "3.11", "3.12"]'
+        default: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
+      python-integration-versions:
+        required: false
+        type: string
+        description: The JSON array of Python versions to integration test with.
+        default: '["3.12"]'
       poetry-version:
         required: false
         type: string
@@ -258,7 +263,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJSON(inputs.python-versions) }}
+        python-version: ${{ fromJSON(inputs.python-integration-versions) }}
         os:
           - ubuntu-latest
           - macos-13
@@ -338,7 +343,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJSON(inputs.python-versions) }}
+        python-version: ${{ fromJSON(inputs.python-integration-versions) }}
     permissions:
       # No write permission
       contents: read
@@ -443,7 +448,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJSON(inputs.python-versions) }}
+        python-version: ${{ fromJSON(inputs.python-integration-versions) }}
     permissions:
       # No write permission
       contents: read
@@ -548,7 +553,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJSON(inputs.python-versions) }}
+        python-version: ${{ fromJSON(inputs.python-integration-versions) }}
     permissions:
       # No write permission
       contents: read
