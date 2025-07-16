@@ -99,7 +99,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Install and configure poetry ${{ inputs.poetry-version }}
-        uses: hpcflow/github-support/setup-poetry@main
+        uses: hpcflow/github-support/setup-poetry@build/update-poetry
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache Virtual Environment
