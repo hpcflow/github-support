@@ -48,21 +48,21 @@ on:
       python-version:
         description: >
           Version of Python to use.
-          Note that the version in CentOS is locked by the Docker image.
+          Note that the version in Rocky Linux is locked by the Docker image.
         type: string
         required: false
         default: "3.12"
       poetry-version:
         description: >
           Version of Poetry to use.
-          Note that the version in CentOS is locked by the Docker image.
+          Note that the version in Rocky Linux is locked by the Docker image.
         type: string
         required: false
         default: "1.4"
     outputs:
       linux-success:
         description: >
-          Whether we built at least one executable format for CentOS Linux.
+          Whether we built at least one executable format for Rocky Linux.
         value: ${{ jobs.linux.outputs.success }}
       macos-success:
         description: >
@@ -74,12 +74,12 @@ on:
         value: ${{ jobs.windows.outputs.success }}
       linux-file-url:
         description: >
-          Where to download the single-file build for CentOS Linux.
+          Where to download the single-file build for Rocky Linux.
           This is a temporary URL with access controls applied.
         value: ${{ jobs.linux.outputs.file }}
       linux-folder-url:
         description: >
-          Where to download the folder-based build for CentOS Linux.
+          Where to download the folder-based build for Rocky Linux.
           This is a temporary URL with access controls applied.
         value: ${{ jobs.linux.outputs.folder }}
       macos-file-url:
@@ -102,7 +102,7 @@ on:
           Where to download the folder-based build for Windows.
           This is a temporary URL with access controls applied.
         value: ${{ jobs.windows.outputs.folder }}
-            
+
 jobs:
   status:
     name: Get Git Information
@@ -323,7 +323,7 @@ jobs:
           ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir test ${{ inputs.unit_test_args }}
 
   linux:
-    name: Build Linux (CentOS 7) Executables
+    name: Build Linux (Rocky Linux 8) Executables
     if: inputs.build_linux == 'true'
     outputs:
       success: ${{ steps.upload-file.outcome == 'success' || steps.upload-folder.outcome == 'success' }}
@@ -345,16 +345,15 @@ jobs:
         if: inputs.build_onefile == 'true'
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/hpcflow/centos7-poetry:latest
+          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           run: |
             # set up poetry
             cd /home
             poetry config virtualenvs.in-project true
-            poetry config installer.modern-installation false
             poetry install --without dev
 
-            # build with pyinstaller for CentOS (file)
+            # build with pyinstaller for Rocky Linux (file)
             cd ${{ inputs.pyinstaller_dir }}
             ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux ${{ inputs.logLevel }} onefile
             cd ..
@@ -371,16 +370,15 @@ jobs:
         if: inputs.build_onedir == 'true'
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/hpcflow/centos7-poetry:latest
+          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           run: |
             # set up poetry
             cd /home
             poetry config virtualenvs.in-project true
-            poetry config installer.modern-installation false
             poetry install --without dev
 
-            # build with pyinstaller for CentOS (folder)
+            # build with pyinstaller for Rocky Linux (folder)
             cd ${{ inputs.pyinstaller_dir }}
             ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir ${{ inputs.logLevel }} onedir
             cd ..

@@ -13,7 +13,7 @@ on:
         required: true
         type: string
       invocation_tests:
-        description: > 
+        description: >
           Run invocation tests.
         required: true
         type: string
@@ -131,7 +131,7 @@ on:
         description: >
           PAT of user who has permission to bypass branch protection,
           or standard GITHUB_TOKEN if running on an external fork
-  
+
 # e.g. don't run simultaneously on the same branch (since we may commit to that branch)
 concurrency: ci-${{ inputs.head-ref && format('refs/heads/{0}', inputs.head-ref) || inputs.ref }}
 
@@ -225,7 +225,7 @@ jobs:
         run: |
           poetry run python -m pytest ${{ inputs.pytest_args }} ${{ inputs.unit_test_args }}
 
-  test-units-CentOS:
+  test-units-RockyLinux:
     needs: pre-commit
     runs-on: ubuntu-latest
     if: inputs.unit_tests == 'true'
@@ -241,17 +241,16 @@ jobs:
         uses: hpcflow/github-support/init-cache@main
         with:
           name: test
-          version: CentOS
+          version: RockyLinux
 
       - name: Run unit tests within Docker
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/hpcflow/centos7-poetry:latest
+          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           run: |
             cd /home
             poetry config virtualenvs.in-project true
-            poetry config installer.modern-installation false
             poetry install --without dev,pyinstaller
             export PYTHONUNBUFFERED=ok
             poetry run python -m pytest ${{ inputs.unit_test_args }}
@@ -305,7 +304,7 @@ jobs:
         run: |
           poetry run ${{ inputs.executable_name }} test ${{ inputs.pytest_args }} --integration ${{ inputs.integration_test_args }}
 
-  test-integration-CentOS:
+  test-integration-RockyLinux:
     needs: pre-commit
     runs-on: ubuntu-latest
     if: inputs.integration_tests == 'true'
@@ -321,17 +320,16 @@ jobs:
         uses: hpcflow/github-support/init-cache@main
         with:
           name: test-integration
-          version: CentOS
+          version: RockyLinux
 
       - name: Run integration tests within Docker
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/hpcflow/centos7-poetry:latest
+          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           run: |
             cd /home
             poetry config virtualenvs.in-project true
-            poetry config installer.modern-installation false
             poetry install --without dev,pyinstaller
             export PYTHONUNBUFFERED=ok
             poetry run ${{ inputs.executable_name }} test --integration ${{ inputs.integration_test_args }}
