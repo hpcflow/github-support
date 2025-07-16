@@ -318,7 +318,7 @@ jobs:
           name: build
           version: ${{ inputs.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -495,7 +495,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
@@ -575,7 +575,7 @@ jobs:
           name: release
           version: ${{ inputs.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -684,7 +684,7 @@ jobs:
           name: release-doc
           version: ${{ inputs.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         with:
           version: ${{ inputs.poetry-version }}
 

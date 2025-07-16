@@ -150,7 +150,7 @@ jobs:
           name: build-exe
           version: ${{ inputs.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -247,7 +247,7 @@ jobs:
           name: build-exe
           version: ${{ inputs.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         with:
           version: ${{ inputs.poetry-version }}
 

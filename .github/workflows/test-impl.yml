@@ -202,7 +202,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
@@ -282,7 +282,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
@@ -363,7 +363,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
@@ -468,7 +468,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
@@ -573,7 +573,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@build/update-poetry
+        uses: hpcflow/github-support/setup-poetry@main
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
