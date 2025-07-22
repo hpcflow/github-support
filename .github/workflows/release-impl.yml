@@ -111,7 +111,7 @@ on:
           Note that the version in Rocky Linux is locked by the Docker image.
         type: string
         required: false
-        default: "3.12"
+        default: "3.13"
       poetry-version:
         description: >
           Version of Poetry to use.
