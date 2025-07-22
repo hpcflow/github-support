@@ -38,7 +38,7 @@ on:
         type: string
         description: >
           Template parameter.
-          Path to Python file containing application version data. 
+          Path to Python file containing application version data.
       benchmark_make_workflow:
         required: true
         type: string
@@ -108,14 +108,14 @@ on:
       python-version:
         description: >
           Version of Python to use.
-          Note that the version in CentOS is locked by the Docker image.
+          Note that the version in Rocky Linux is locked by the Docker image.
         type: string
         required: false
         default: "3.12"
       poetry-version:
         description: >
           Version of Poetry to use.
-          Note that the version in CentOS is locked by the Docker image.
+          Note that the version in Rocky Linux is locked by the Docker image.
         type: string
         required: false
         default: "1.4"
@@ -153,7 +153,7 @@ on:
         description: >
           Whether the release was successfully published to the website.
         value: ${{ jobs.update-website.outputs.publish-state == 'success' }}
-  
+
 jobs:
   bump-version:
     # skip if trying to re-run; PR is closed without merging; '[skip release]' is in the PR title; or if merging any branch other than pre_release_branch into release_branch
@@ -412,18 +412,17 @@ jobs:
       - name: Build executables within Docker
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/hpcflow/centos7-poetry:latest
+          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.general-token }}
           run: |
             # set up poetry
             cd /home
             poetry config virtualenvs.in-project true
-            poetry config installer.modern-installation false
             poetry install --without dev
             base="${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}"
             vers_expected="${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
 
-            # build with pyinstaller for CentOS (file)
+            # build with pyinstaller for Rocky Linux (file)
             cd ${{ inputs.pyinstaller_dir }}
             ./make.sh ${base}-linux INFO onefile
             cd ..
@@ -437,7 +436,7 @@ jobs:
             # run test suite on the frozen app (file)
             ${{ inputs.pyinstaller_dir }}/dist/onefile/${base}-linux test
 
-            # build with pyinstaller for CentOS (folder)
+            # build with pyinstaller for Rocky Linux (folder)
             cd ${{ inputs.pyinstaller_dir }}
             ./make.sh ${base}-linux-dir INFO onedir
             cd ..
