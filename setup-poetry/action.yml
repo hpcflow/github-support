@@ -31,7 +31,6 @@ runs:
       shell: bash
       run: |
         poetry config virtualenvs.in-project true
-        poetry config installer.modern-installation false
         if [ "$RUNNER_OS" = "Windows" ]; then
           poetry config installer.max-workers 1
         fi
