@@ -532,7 +532,7 @@ jobs:
         run: |
           mkdir benchmarks
       - name: Load benchmark data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           merge-multiple: true
           path: benchmarks
@@ -588,7 +588,7 @@ jobs:
         run: mkdir release-artifacts
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: release-artifacts
 
@@ -723,7 +723,7 @@ jobs:
         uses: hpcflow/github-support/configure-git@0.3
 
       - name: Download documentation artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: docs_html
           path: docs/${{ needs.bump-version.outputs.new_tag }}
