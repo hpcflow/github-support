@@ -112,7 +112,7 @@ jobs:
       sha: ${{ steps.info.outputs.sha }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # get all history and tags
       - name: Get executable version name and store git SHA
@@ -139,7 +139,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -236,7 +236,7 @@ jobs:
     runs-on: macos-13
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -333,7 +333,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Cache dependencies
         uses: hpcflow/github-support/init-cache@0.3
         with:
