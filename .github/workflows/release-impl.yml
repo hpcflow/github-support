@@ -165,7 +165,7 @@ jobs:
       changelog: ${{ steps.upload-changelog.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }}
@@ -305,7 +305,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Set up python ${{ inputs.python-version }}
@@ -400,7 +400,7 @@ jobs:
     needs: bump-version
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Cache dependencies
@@ -486,7 +486,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.ref }}
       - name: Set up python ${{ inputs.python-version }}
@@ -525,7 +525,7 @@ jobs:
       benchmark-url: ${{ steps.upload.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.ref }}
       - name: Make benchmark directory
@@ -561,7 +561,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Set up python ${{ inputs.python-version }}
@@ -641,7 +641,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
@@ -714,7 +714,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.website_source_org }}/${{ inputs.website_source_repo }}
           token: ${{ secrets.website-token }}
