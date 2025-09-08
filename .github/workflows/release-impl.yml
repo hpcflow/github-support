@@ -173,7 +173,7 @@ jobs:
       - name: Configure git
         uses: hpcflow/github-support/configure-git@0.3
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -309,7 +309,7 @@ jobs:
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -490,7 +490,7 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -565,7 +565,7 @@ jobs:
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -651,7 +651,7 @@ jobs:
         uses: hpcflow/github-support/configure-git@0.3
 
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -709,7 +709,7 @@ jobs:
       publish-state: ${{ steps.publish.outcome }}
     steps:
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
