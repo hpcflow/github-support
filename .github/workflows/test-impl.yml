@@ -155,7 +155,7 @@ jobs:
       - name: Configure git for commits
         uses: hpcflow/github-support/configure-git@main
       - name: Set up python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
@@ -198,7 +198,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -277,7 +277,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -357,7 +357,7 @@ jobs:
           path: github-support
           ref: ${{ inputs.script-branch }}
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -462,7 +462,7 @@ jobs:
           path: github-support
           ref: ${{ inputs.script-branch }}
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -567,7 +567,7 @@ jobs:
           path: github-support
           ref: ${{ inputs.script-branch }}
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
