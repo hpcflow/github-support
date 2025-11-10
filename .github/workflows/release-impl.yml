@@ -282,7 +282,7 @@ jobs:
           new_tag: ${{ steps.new_tag.outputs.tag }}
 
       - name: Store the incremental CHANGELOG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         id: upload-changelog
         with:
           name: CHANGELOG_increment
@@ -384,13 +384,13 @@ jobs:
           TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir
 
       - name: Upload executable artifact (file)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
 
       - name: Upload executable artifact (compressed folder)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
@@ -456,13 +456,13 @@ jobs:
             cd ..
 
       - name: Upload executable artifact (file)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
 
       - name: Upload executable artifact (compressed folder)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
@@ -512,7 +512,7 @@ jobs:
           poetry run ${{ inputs.executable_name }} --timeit-file benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt make ${{ inputs.benchmark_make_workflow }} --var N ${{ matrix.num_elements }}
 
       - name: Store benchmark data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt
           path: benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt
@@ -540,7 +540,7 @@ jobs:
         run: |
           zip -r ./benchmarks.zip benchmarks
       - name: Store compound benchmark data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: benchmarks.zip
           path: benchmarks.zip
@@ -697,7 +697,7 @@ jobs:
         working-directory: docs
 
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docs_html
           path: docs/build/html
