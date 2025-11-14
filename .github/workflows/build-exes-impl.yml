@@ -233,7 +233,7 @@ jobs:
       file: ${{ steps.upload-file.outputs.artifact-url }}
       folder: ${{ steps.upload-folder.outputs.artifact-url }}
     needs: status
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4

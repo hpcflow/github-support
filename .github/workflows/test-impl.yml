@@ -186,7 +186,7 @@ jobs:
         python-version: ${{ fromJSON(inputs.python-versions) }}
         os:
           - ubuntu-latest
-          - macos-13
+          - macos-latest
           - windows-latest
     permissions:
       # No write permission
@@ -265,7 +265,7 @@ jobs:
         python-version: ${{ fromJSON(inputs.python-integration-versions) }}
         os:
           - ubuntu-latest
-          - macos-13
+          - macos-latest
           - windows-latest
     permissions:
       # No write permission
@@ -442,7 +442,7 @@ jobs:
 
   test-invocation-macos:
     if: inputs.invocation_tests == 'true'
-    runs-on: macos-13
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:

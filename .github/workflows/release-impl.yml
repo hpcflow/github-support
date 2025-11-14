@@ -293,12 +293,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-13]
+        os: [windows-latest, macos-latest]
         include:
           - os: windows-latest
             executable_ext: .exe
             executable_os: win
-          - os: macos-13
+          - os: macos-latest
             executable_ext: ""
             executable_os: macOS
 
@@ -477,7 +477,7 @@ jobs:
           - "3.12"
         os:
           - ubuntu-latest
-          - macos-13
+          - macos-latest
           - windows-latest
         num_elements:
           - 1
