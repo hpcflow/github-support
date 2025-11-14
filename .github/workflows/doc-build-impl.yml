@@ -85,17 +85,17 @@ jobs:
       artifact-url: ${{ steps.upload.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
       - name: Checkout support code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
       - name: Init Python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
       - name: Install and configure poetry ${{ inputs.poetry-version }}
@@ -120,7 +120,7 @@ jobs:
         working-directory: docs
       - name: Upload documentation artifact
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
           path: docs/build/html
@@ -145,14 +145,14 @@ jobs:
       page-url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download documentation artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: site
           merge-multiple: true
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact to documentation staging
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           # Upload dist repository
           path: site

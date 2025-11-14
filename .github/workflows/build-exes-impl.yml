@@ -112,7 +112,7 @@ jobs:
       sha: ${{ steps.info.outputs.sha }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # get all history and tags
       - name: Get executable version name and store git SHA
@@ -139,9 +139,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -172,7 +172,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.win_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
@@ -180,21 +180,21 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
 
       - name: Upload spec file
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
 
       - name: Upload build directory
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
@@ -236,9 +236,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -269,7 +269,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.mac_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -277,21 +277,21 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
 
       - name: Upload spec file
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
 
       - name: Upload build directory
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -333,7 +333,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Cache dependencies
         uses: hpcflow/github-support/init-cache@0.3
         with:
@@ -393,7 +393,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.linux_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
@@ -401,21 +401,21 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
 
       - name: Upload spec file
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
 
       - name: Upload build directory
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux

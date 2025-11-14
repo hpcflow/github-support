@@ -165,7 +165,7 @@ jobs:
       changelog: ${{ steps.upload-changelog.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }}
@@ -173,7 +173,7 @@ jobs:
       - name: Configure git
         uses: hpcflow/github-support/configure-git@0.3
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -282,7 +282,7 @@ jobs:
           new_tag: ${{ steps.new_tag.outputs.tag }}
 
       - name: Store the incremental CHANGELOG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         id: upload-changelog
         with:
           name: CHANGELOG_increment
@@ -305,11 +305,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -384,13 +384,13 @@ jobs:
           TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir
 
       - name: Upload executable artifact (file)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
 
       - name: Upload executable artifact (compressed folder)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
@@ -400,7 +400,7 @@ jobs:
     needs: bump-version
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Cache dependencies
@@ -456,13 +456,13 @@ jobs:
             cd ..
 
       - name: Upload executable artifact (file)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
 
       - name: Upload executable artifact (compressed folder)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
@@ -486,11 +486,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.ref }}
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -512,7 +512,7 @@ jobs:
           poetry run ${{ inputs.executable_name }} --timeit-file benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt make ${{ inputs.benchmark_make_workflow }} --var N ${{ matrix.num_elements }}
 
       - name: Store benchmark data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt
           path: benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt
@@ -525,14 +525,14 @@ jobs:
       benchmark-url: ${{ steps.upload.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.ref }}
       - name: Make benchmark directory
         run: |
           mkdir benchmarks
       - name: Load benchmark data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           merge-multiple: true
           path: benchmarks
@@ -540,7 +540,7 @@ jobs:
         run: |
           zip -r ./benchmarks.zip benchmarks
       - name: Store compound benchmark data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: benchmarks.zip
           path: benchmarks.zip
@@ -561,11 +561,11 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -588,7 +588,7 @@ jobs:
         run: mkdir release-artifacts
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: release-artifacts
 
@@ -641,7 +641,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
@@ -651,7 +651,7 @@ jobs:
         uses: hpcflow/github-support/configure-git@0.3
 
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -697,7 +697,7 @@ jobs:
         working-directory: docs
 
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docs_html
           path: docs/build/html
@@ -709,12 +709,12 @@ jobs:
       publish-state: ${{ steps.publish.outcome }}
     steps:
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.website_source_org }}/${{ inputs.website_source_repo }}
           token: ${{ secrets.website-token }}
@@ -723,7 +723,7 @@ jobs:
         uses: hpcflow/github-support/configure-git@0.3
 
       - name: Download documentation artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: docs_html
           path: docs/${{ needs.bump-version.outputs.new_tag }}

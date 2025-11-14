@@ -58,11 +58,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -96,7 +96,7 @@ jobs:
         shell: bash
 
       - name: Store benchmark file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.vars.outputs.timeit }}
           path: ${{ steps.vars.outputs.timeit }}
@@ -112,12 +112,12 @@ jobs:
         run: |
           mkdir benchmarks
       - name: Fetch benchmark files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           merge-multiple: true
           path: benchmarks
       - name: Store benchmark data archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         id: upload
         with:
           name: benchmarks
