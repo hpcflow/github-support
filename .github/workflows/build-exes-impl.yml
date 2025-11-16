@@ -59,6 +59,18 @@ on:
         type: string
         required: false
         default: "2.1.3"
+      config_data_dir:
+        description: >
+          URL to set the config item `data_dir` to before running the tests.
+        type: string
+        required: false
+        default: ""
+      config_program_dir:
+        description: >
+          URL to set the config item `program_dir` to before running the tests.
+        type: string
+        required: false
+        default: ""
     outputs:
       linux-success:
         description: >
@@ -199,15 +211,25 @@ jobs:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
 
-      - name: Set demo data GitHub URL using current git SHA (file) # instead of default which is current version tag
-        if: steps.win_onefile.outcome == 'success'
+      - name: Set data dir (file) # in case we have a custom tag to use
+        if: steps.win_onefile.outcome == 'success' && inputs.config_data_dir != ''
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe config set data_dir ${{ inputs.config_data_dir }}
 
-      - name: Set demo data GitHub URL using current git SHA (folder) # instead of default which is current version tag
-        if: steps.win_onedir.outcome == 'success'
+      - name: Set program dir (file) # in case we have a custom tag to use
+        if: steps.win_onefile.outcome == 'success' && inputs.config_program_dir != ''
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe config set program_dir ${{ inputs.config_program_dir }}
+
+      - name: Set data dir (folder) # in case we have a custom tag to use
+        if: steps.win_onedir.outcome == 'success' && inputs.config_data_dir != ''
+        run: |
+          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe config set data_dir ${{ inputs.config_data_dir }}
+
+      - name: Set program dir (folder) # in case we have a custom tag to use
+        if: steps.win_onedir.outcome == 'success' && inputs.config_program_dir != ''
+        run: |
+          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe config set program_dir ${{ inputs.config_program_dir }}
 
       - name: Run test suite on the frozen app (file)
         if: steps.win_onefile.outcome == 'success'
@@ -296,15 +318,25 @@ jobs:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
 
-      - name: Set demo data GitHub URL using current git SHA (file) # instead of default which is current version tag
-        if: steps.mac_onefile.outcome == 'success'
+      - name: Set data dir (file) # in case we have a custom tag to use
+        if: steps.mac_onefile.outcome == 'success' && inputs.config_data_dir != ''
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS config set data_dir ${{ inputs.config_data_dir }}
 
-      - name: Set demo data GitHub URL using current git SHA (folder) # instead of default which is current version tag
-        if: steps.mac_onedir.outcome == 'success'
+      - name: Set program dir (file) # in case we have a custom tag to use
+        if: steps.mac_onefile.outcome == 'success' && inputs.config_program_dir != ''
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS config set program_dir ${{ inputs.config_program_dir }}
+
+      - name: Set data dir (folder) # in case we have a custom tag to use
+        if: steps.mac_onedir.outcome == 'success' && inputs.config_data_dir != ''
+        run: |
+          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir config set data_dir ${{ inputs.config_data_dir }}
+
+      - name: Set program dir (folder) # in case we have a custom tag to use
+        if: steps.mac_onedir.outcome == 'success' && inputs.config_program_dir != ''
+        run: |
+          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir config set program_dir ${{ inputs.config_program_dir }}
 
       - name: Run test suite on the frozen app (file)
         if: steps.mac_onefile.outcome == 'success'
@@ -358,8 +390,21 @@ jobs:
             ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux ${{ inputs.logLevel }} onefile
             cd ..
 
-            # set demo data GitHub URL using current git SHA (file), instead of default which is current version tag
-            ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
+            # Set data dir in case we have a custom tag to use
+            if [[ -n "${{ inputs.config_data_dir }}" ]]; then
+              echo "config_data_dir is not empty: ${{ inputs.config_data_dir }}"
+              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux config set data_dir ${{ inputs.config_data_dir }}
+            else
+              echo "config_data_dir is empty, skipping command"
+            fi
+
+            # Set program dir in case we have a custom tag to use
+            if [[ -n "${{ inputs.config_program_dir }}" ]]; then
+              echo "config_program_dir is not empty: ${{ inputs.config_program_dir }}"
+              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux config set program_dir ${{ inputs.config_program_dir }}
+            else
+              echo "config_program_dir is empty, skipping command"
+            fi
 
             export PYTHONUNBUFFERED=ok
             # run test suite on the frozen app (file)
@@ -383,8 +428,21 @@ jobs:
             ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir ${{ inputs.logLevel }} onedir
             cd ..
 
-            # set demo data GitHub URL using current git SHA (folder), instead of default which is current version tag
-            ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir config set-github-demo-data-dir ${{ needs.status.outputs.sha }}
+            # Set data dir in case we have a custom tag to use
+            if [[ -n "${{ inputs.config_data_dir }}" ]]; then
+              echo "config_data_dir is not empty: ${{ inputs.config_data_dir }}"
+              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir config set data_dir ${{ inputs.config_data_dir }}
+            else
+              echo "config_data_dir is empty, skipping command"
+            fi
+
+            # Set program dir in case we have a custom tag to use
+            if [[ -n "${{ inputs.config_program_dir }}" ]]; then
+              echo "config_program_dir is not empty: ${{ inputs.config_program_dir }}"
+              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir config set program_dir ${{ inputs.config_program_dir }}
+            else
+              echo "config_program_dir is empty, skipping command"
+            fi
 
             export PYTHONUNBUFFERED=ok
             # run test suite on the frozen app (folder)
