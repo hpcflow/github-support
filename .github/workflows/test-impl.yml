@@ -253,15 +253,6 @@ jobs:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
-      - name: Install cached app data
-        run: |
-          poetry run python -m ${{ inputs.CLI_module }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          poetry run python -m ${{ inputs.CLI_module }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-
-      - name: "[TEMP] Show cached data"
-        run: |
-          poetry run python -m ${{ inputs.CLI_module }} data --list
-
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
@@ -277,6 +268,15 @@ jobs:
         timeout-minutes: ${{ inputs.install-timeout-minutes }}
         run: |
           poetry install --without dev,pyinstaller
+
+      - name: Install cached app data
+        run: |
+          poetry run python -m ${{ inputs.CLI_module }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+          poetry run python -m ${{ inputs.CLI_module }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+
+      - name: "[TEMP] Show cached data"
+        run: |
+          poetry run python -m ${{ inputs.CLI_module }} data --list
 
       - name: Run tests
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
