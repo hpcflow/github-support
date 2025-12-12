@@ -270,16 +270,13 @@ jobs:
           poetry install --without dev,pyinstaller
 
       - name: Install cached app data
-        run: |
-          poetry run python -m ${{ inputs.CLI_module }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          poetry run python -m ${{ inputs.CLI_module }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-
-      - name: Show cached data
         env:
           PYTHONUTF8: 1
         run: |
-          poetry run python -m ${{ inputs.CLI_module }} data --list
-          poetry run python -m ${{ inputs.CLI_module }} program --list
+          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+          poetry run ${{ inputs.executable_name }} data --list
+          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs          
+          poetry run ${{ inputs.executable_name }} program --list
 
       - name: Run tests
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
@@ -307,6 +304,12 @@ jobs:
           name: test
           version: RockyLinux
 
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
+
       - name: Run unit tests within Docker
         uses: addnab/docker-run-action@v3
         with:
@@ -316,12 +319,16 @@ jobs:
             cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev,pyinstaller
+            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+            poetry run ${{ inputs.executable_name }} data --list
+            poetry run ${{ inputs.executable_name }} program --list
             export PYTHONUNBUFFERED=ok
             poetry run python -m pytest ${{ inputs.unit_test_args }}
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
 
   test-integration:
-    needs: pre-commit
+    needs: [pre-commit, cache-app-data]
     if: inputs.integration_tests == 'true'
     strategy:
       fail-fast: false
@@ -355,10 +362,25 @@ jobs:
           name: test-integration
           version: ${{ matrix.python-version }}
 
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
+
       - name: Install dependencies
         timeout-minutes: ${{ inputs.install-timeout-minutes }}
         run: |
           poetry install --without dev,pyinstaller
+
+      - name: Install cached app data
+        env:
+          PYTHONUTF8: 1
+        run: |
+          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+          poetry run ${{ inputs.executable_name }} data --list
+          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+          poetry run ${{ inputs.executable_name }} program --list
 
       - name: Run integration tests
         timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}
@@ -369,7 +391,7 @@ jobs:
           poetry run ${{ inputs.executable_name }} test ${{ inputs.pytest_args }} --integration ${{ inputs.integration_test_args }}
 
   test-integration-RockyLinux:
-    needs: pre-commit
+    needs: [pre-commit, cache-app-data]
     runs-on: ubuntu-latest
     if: inputs.integration_tests == 'true'
     permissions:
@@ -386,6 +408,12 @@ jobs:
           name: test-integration
           version: RockyLinux
 
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
+
       - name: Run integration tests within Docker
         uses: addnab/docker-run-action@v3
         with:
@@ -395,6 +423,10 @@ jobs:
             cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev,pyinstaller
+            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+            poetry run ${{ inputs.executable_name }} data --list
+            poetry run ${{ inputs.executable_name }} program --list
             export PYTHONUNBUFFERED=ok
             poetry run ${{ inputs.executable_name }} test --integration ${{ inputs.integration_test_args }}
         timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}
