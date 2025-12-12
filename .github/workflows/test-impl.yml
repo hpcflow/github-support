@@ -274,9 +274,12 @@ jobs:
           poetry run python -m ${{ inputs.CLI_module }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
           poetry run python -m ${{ inputs.CLI_module }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
 
-      - name: "[TEMP] Show cached data"
+      - name: Show cached data
+        env:
+          PYTHONUTF8: 1
         run: |
           poetry run python -m ${{ inputs.CLI_module }} data --list
+          poetry run python -m ${{ inputs.CLI_module }} program --list
 
       - name: Run tests
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
