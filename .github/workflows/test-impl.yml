@@ -284,7 +284,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
         run: |
-          poetry run python -m pytest ${{ inputs.pytest_args }} ${{ inputs.unit_test_args }}
+          poetry run ${{ inputs.executable_name }} test ${{ inputs.pytest_args }} ${{ inputs.unit_test_args }}
 
   test-units-RockyLinux:
     needs: [pre-commit, cache-app-data]
@@ -324,7 +324,7 @@ jobs:
             poetry run ${{ inputs.executable_name }} data --list
             poetry run ${{ inputs.executable_name }} program --list
             export PYTHONUNBUFFERED=ok
-            poetry run python -m pytest ${{ inputs.unit_test_args }}
+            poetry run ${{ inputs.executable_name }} test ${{ inputs.unit_test_args }}
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
 
   test-integration:
