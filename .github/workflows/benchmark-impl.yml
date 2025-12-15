@@ -112,7 +112,7 @@ jobs:
         run: |
           mkdir benchmarks
       - name: Fetch benchmark files
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           merge-multiple: true
           path: benchmarks

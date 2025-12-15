@@ -248,7 +248,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -305,7 +305,7 @@ jobs:
           version: RockyLinux
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -363,7 +363,7 @@ jobs:
           version: ${{ matrix.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -409,7 +409,7 @@ jobs:
           version: RockyLinux
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
