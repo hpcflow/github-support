@@ -217,7 +217,7 @@ jobs:
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ~/.cache/${{ inputs.executable_name }}

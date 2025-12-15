@@ -96,7 +96,7 @@ jobs:
         shell: bash
 
       - name: Store benchmark file
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.vars.outputs.timeit }}
           path: ${{ steps.vars.outputs.timeit }}
@@ -117,7 +117,7 @@ jobs:
           merge-multiple: true
           path: benchmarks
       - name: Store benchmark data archive
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         id: upload
         with:
           name: benchmarks
