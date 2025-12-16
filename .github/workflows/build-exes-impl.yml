@@ -140,6 +140,59 @@ jobs:
           echo "sha is: $sha"
           echo "sha=$sha" >> $GITHUB_OUTPUT
 
+  cache-app-data:
+    permissions:
+      # No write permission
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@main
+        with:
+          version: ${{ inputs.poetry-version }}
+
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
+        with:
+          name: test
+          version: ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --without dev,pyinstaller
+
+      - name: Set data dir # in case we have a custom tag to use
+        if: inputs.config_data_dir != ''
+        run: |
+          poetry run ${{ inputs.executable_name }} config set data_dir ${{ inputs.config_data_dir }}
+
+      - name: Set program dir # in case we have a custom tag to use
+        if: inputs.config_program_dir != ''
+        run: |
+          poetry run ${{ inputs.executable_name }} config set program_dir ${{ inputs.config_program_dir }}
+
+      - name: Cache all app data and programs
+        run: |
+          poetry run ${{ inputs.executable_name }} data cache --all
+          poetry run ${{ inputs.executable_name }} program cache --all
+
+      - name: Upload all cached app data/programs
+        id: upload-cached-app-data
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ~/.cache/${{ inputs.executable_name }}
+
   windows:
     name: Build Windows Executables
     if: inputs.build_windows == 'true'
@@ -147,7 +200,7 @@ jobs:
       success: ${{ steps.upload-file.outcome == 'success' || steps.upload-folder.outcome == 'success' }}
       file: ${{ steps.upload-file.outputs.artifact-url }}
       folder: ${{ steps.upload-folder.outputs.artifact-url }}
-    needs: status
+    needs: [status, cache-app-data]
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -161,6 +214,13 @@ jobs:
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
+
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
+
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
         with:
@@ -211,25 +271,14 @@ jobs:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
 
-      - name: Set data dir (file) # in case we have a custom tag to use
-        if: steps.win_onefile.outcome == 'success' && inputs.config_data_dir != ''
+      - name: Install cached app data
+        env:
+          PYTHONUTF8: 1
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe config set data_dir ${{ inputs.config_data_dir }}
-
-      - name: Set program dir (file) # in case we have a custom tag to use
-        if: steps.win_onefile.outcome == 'success' && inputs.config_program_dir != ''
-        run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe config set program_dir ${{ inputs.config_program_dir }}
-
-      - name: Set data dir (folder) # in case we have a custom tag to use
-        if: steps.win_onedir.outcome == 'success' && inputs.config_data_dir != ''
-        run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe config set data_dir ${{ inputs.config_data_dir }}
-
-      - name: Set program dir (folder) # in case we have a custom tag to use
-        if: steps.win_onedir.outcome == 'success' && inputs.config_program_dir != ''
-        run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe config set program_dir ${{ inputs.config_program_dir }}
+          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+          poetry run ${{ inputs.executable_name }} data --list
+          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+          poetry run ${{ inputs.executable_name }} program --list
 
       - name: Run test suite on the frozen app (file)
         if: steps.win_onefile.outcome == 'success'
@@ -254,7 +303,7 @@ jobs:
       success: ${{ steps.upload-file.outcome == 'success' || steps.upload-folder.outcome == 'success' }}
       file: ${{ steps.upload-file.outputs.artifact-url }}
       folder: ${{ steps.upload-folder.outputs.artifact-url }}
-    needs: status
+    needs: [status, cache-app-data]
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -268,6 +317,13 @@ jobs:
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
+
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
+
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
         with:
@@ -318,25 +374,12 @@ jobs:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
 
-      - name: Set data dir (file) # in case we have a custom tag to use
-        if: steps.mac_onefile.outcome == 'success' && inputs.config_data_dir != ''
+      - name: Install cached app data
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS config set data_dir ${{ inputs.config_data_dir }}
-
-      - name: Set program dir (file) # in case we have a custom tag to use
-        if: steps.mac_onefile.outcome == 'success' && inputs.config_program_dir != ''
-        run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS config set program_dir ${{ inputs.config_program_dir }}
-
-      - name: Set data dir (folder) # in case we have a custom tag to use
-        if: steps.mac_onedir.outcome == 'success' && inputs.config_data_dir != ''
-        run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir config set data_dir ${{ inputs.config_data_dir }}
-
-      - name: Set program dir (folder) # in case we have a custom tag to use
-        if: steps.mac_onedir.outcome == 'success' && inputs.config_program_dir != ''
-        run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir config set program_dir ${{ inputs.config_program_dir }}
+          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+          poetry run ${{ inputs.executable_name }} data --list
+          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+          poetry run ${{ inputs.executable_name }} program --list
 
       - name: Run test suite on the frozen app (file)
         if: steps.mac_onefile.outcome == 'success'
@@ -361,7 +404,7 @@ jobs:
       success: ${{ steps.upload-file.outcome == 'success' || steps.upload-folder.outcome == 'success' }}
       file: ${{ steps.upload-file.outputs.artifact-url }}
       folder: ${{ steps.upload-folder.outputs.artifact-url }}
-    needs: status
+    needs: [status, cache-app-data]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -371,6 +414,12 @@ jobs:
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
+
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Build executable (file) within Docker
         id: linux_onefile
@@ -390,21 +439,11 @@ jobs:
             ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux ${{ inputs.logLevel }} onefile
             cd ..
 
-            # Set data dir in case we have a custom tag to use
-            if [[ -n "${{ inputs.config_data_dir }}" ]]; then
-              echo "config_data_dir is not empty: ${{ inputs.config_data_dir }}"
-              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux config set data_dir ${{ inputs.config_data_dir }}
-            else
-              echo "config_data_dir is empty, skipping command"
-            fi
-
-            # Set program dir in case we have a custom tag to use
-            if [[ -n "${{ inputs.config_program_dir }}" ]]; then
-              echo "config_program_dir is not empty: ${{ inputs.config_program_dir }}"
-              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux config set program_dir ${{ inputs.config_program_dir }}
-            else
-              echo "config_program_dir is empty, skipping command"
-            fi
+            # install cache data
+            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+            poetry run ${{ inputs.executable_name }} data --list
+            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+            poetry run ${{ inputs.executable_name }} program --list
 
             export PYTHONUNBUFFERED=ok
             # run test suite on the frozen app (file)
@@ -428,21 +467,11 @@ jobs:
             ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir ${{ inputs.logLevel }} onedir
             cd ..
 
-            # Set data dir in case we have a custom tag to use
-            if [[ -n "${{ inputs.config_data_dir }}" ]]; then
-              echo "config_data_dir is not empty: ${{ inputs.config_data_dir }}"
-              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir config set data_dir ${{ inputs.config_data_dir }}
-            else
-              echo "config_data_dir is empty, skipping command"
-            fi
-
-            # Set program dir in case we have a custom tag to use
-            if [[ -n "${{ inputs.config_program_dir }}" ]]; then
-              echo "config_program_dir is not empty: ${{ inputs.config_program_dir }}"
-              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir config set program_dir ${{ inputs.config_program_dir }}
-            else
-              echo "config_program_dir is empty, skipping command"
-            fi
+            # install cache data
+            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+            poetry run ${{ inputs.executable_name }} data --list
+            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+            poetry run ${{ inputs.executable_name }} program --list
 
             export PYTHONUNBUFFERED=ok
             # run test suite on the frozen app (folder)
