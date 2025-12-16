@@ -348,9 +348,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       BUILT_EXE_BASE_NAME: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}
-      BUILT_EXE_PATH_DIR: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir/${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir${{ matrix.executable_ext }}
-      BUILT_EXE_PATH_DIR_ZIPPED: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir.zip
-      BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
+      BUILT_EXE_PATH_DIR: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir${{ matrix.executable_ext }}
+      BUILT_EXE_PATH_DIR_ZIPPED: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
+      BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -463,10 +463,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [bump-version, cache-app-data]
     env:
-      BUILT_EXE_BASE_NAME: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}
-      BUILT_EXE_PATH_DIR: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ env.BUILT_EXE_BASE_NAME }}-linux-dir/${{ env.BUILT_EXE_BASE_NAME }}-linux-dir
-      BUILT_EXE_PATH_DIR_ZIPPED: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ env.BUILT_EXE_BASE_NAME }}-linux-dir.zip
-      BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ env.BUILT_EXE_BASE_NAME }}-linux
+      BUILT_EXE_PATH_DIR: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir
+      BUILT_EXE_PATH_DIR_ZIPPED: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
+      BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
     steps:
       - name: Checkout
         uses: actions/checkout@v6
