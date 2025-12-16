@@ -191,7 +191,7 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: ${{ fromJSON(inputs.python-versions)[-1] }}
 
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
@@ -203,7 +203,7 @@ jobs:
         uses: hpcflow/github-support/init-cache@main
         with:
           name: test
-          version: ${{ matrix.python-version }}
+          version: ${{ fromJSON(inputs.python-versions)[-1] }}
 
       - name: Install dependencies
         timeout-minutes: ${{ inputs.install-timeout-minutes }}
