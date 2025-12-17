@@ -235,6 +235,10 @@ jobs:
       - name: Install dependencies
         run: poetry install --without dev
 
+      - name: Configure the app's Python environment # this allows us to run integration tests that use `script_data_in/out: "direct"`
+        run: |
+          poetry run ${{ inputs.executable_name }} env setup python --use-current
+
       - name: Build with pyinstaller for Windows (file)
         id: win_onefile
         if: inputs.build_onefile == 'true'
@@ -346,6 +350,10 @@ jobs:
       - name: Install dependencies
         run: poetry install --without dev
 
+      - name: Configure the app's Python environment # this allows us to run integration tests that use `script_data_in/out: "direct"`
+        run: |
+          poetry run ${{ inputs.executable_name }} env setup python --use-current
+
       - name: Build with pyinstaller for macOS (file)
         id: mac_onefile
         if: inputs.build_onefile == 'true'
@@ -456,6 +464,10 @@ jobs:
             poetry config virtualenvs.in-project true
             poetry install --without dev
 
+            # Configure the app's Python environment
+            # this allows us to run integration tests that use `script_data_in/out: "direct"`
+            poetry run ${{ inputs.executable_name }} env setup python --use-current
+
             # build with pyinstaller for Rocky Linux (file)
             cd ${{ inputs.pyinstaller_dir }}
             ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux ${{ inputs.logLevel }} onefile
@@ -487,6 +499,10 @@ jobs:
             cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev
+
+            # Configure the app's Python environment
+            # this allows us to run integration tests that use `script_data_in/out: "direct"`
+            poetry run ${{ inputs.executable_name }} env setup python --use-current
 
             # build with pyinstaller for Rocky Linux (folder)
             cd ${{ inputs.pyinstaller_dir }}
