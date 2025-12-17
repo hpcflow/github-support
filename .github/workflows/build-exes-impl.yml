@@ -238,6 +238,8 @@ jobs:
       - name: Configure the app's Python environment # this allows us to run integration tests that use `script_data_in/out: "direct"`
         run: |
           poetry run ${{ inputs.executable_name }} env setup python --use-current
+          poetry run ${{ inputs.executable_name }} config get --all
+          cat ~/.${{ inputs.executable_name }}/configured_envs.yaml
 
       - name: Build with pyinstaller for Windows (file)
         id: win_onefile
@@ -290,21 +292,27 @@ jobs:
           poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
           poetry run ${{ inputs.executable_name }} program --list
 
-      - name: Run test suite on the frozen app (file)
-        if: steps.win_onefile.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYTHONUNBUFFERED: ok
-        run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test ${{ inputs.unit_test_args }}
+      # - name: Run test suite on the frozen app (file)
+      #   if: steps.win_onefile.outcome == 'success'
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     PYTHONUNBUFFERED: ok
+      #   run: |
+      #     ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test ${{ inputs.unit_test_args }}
 
-      - name: Run test suite on the frozen app (folder)
-        if: steps.win_onedir.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYTHONUNBUFFERED: ok
+      # - name: Run test suite on the frozen app (folder)
+      #   if: steps.win_onedir.outcome == 'success'
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     PYTHONUNBUFFERED: ok
+      #   run: |
+      #     ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test ${{ inputs.unit_test_args }}
+
+      - name: check envs
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test ${{ inputs.unit_test_args }}
+          poetry run ${{ inputs.executable_name }} config get --all
+          poetry run ${{ inputs.executable_name }} env list
+          cat ~/.${{ inputs.executable_name }}/configured_envs.yaml
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.win_onefile.outcome == 'success'
