@@ -33,6 +33,12 @@ on:
         required: false
         type: string
         default: ""
+      integration_test_args:
+        description: >
+          CLI args to pass verbatim to pytest (integration tests).
+        required: false
+        type: string
+        default: ""
       executable_name:
         description: >
           Template parameter.
@@ -296,6 +302,14 @@ jobs:
         run: |
           ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test ${{ inputs.unit_test_args }}
 
+      - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
+        if: steps.win_onefile.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
+        run: |
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test ${{ inputs.integration_test_args }} --integration
+
   macos:
     name: Build macOS Executables
     if: inputs.build_macos == 'true'
@@ -397,6 +411,14 @@ jobs:
         run: |
           ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir test ${{ inputs.unit_test_args }}
 
+      - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
+        if: steps.mac_onefile.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUNBUFFERED: ok
+        run: |
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test ${{ inputs.integration_test_args }} --integration
+
   linux:
     name: Build Linux (Rocky Linux 8) Executables
     if: inputs.build_linux == 'true'
@@ -448,6 +470,10 @@ jobs:
             export PYTHONUNBUFFERED=ok
             # run test suite on the frozen app (file)
             ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.unit_test_args }}
+
+            # run integration test suite on the frozen app (file)
+            # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
+            ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.integration_test_args }} --integration
 
       - name: Build executable (folder) within Docker
         id: linux_onedir
