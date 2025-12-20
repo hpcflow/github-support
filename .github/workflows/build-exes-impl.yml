@@ -28,11 +28,23 @@ on:
         required: true
         default: "INFO"
         type: string
+      tmate_debugging:
+        description: "Enable tmate debugging (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: true
+        type: string
+      unit_tests:
+        description: "Run unit tests on the built executables."
+        required: true
+        type: string
       unit_test_args:
         description: "CLI args to pass verbatim to pytest (unit tests)."
         required: false
         type: string
         default: ""
+      integration_tests:
+        description: "Run integration tests on the built executables."
+        required: true
+        type: string
       integration_test_args:
         description: >
           CLI args to pass verbatim to pytest (integration tests).
@@ -211,6 +223,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup tmate session
+        if: inputs.tmate_debugging == 'true'
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -295,7 +314,7 @@ jobs:
           poetry run ${{ inputs.executable_name }} program --list
 
       - name: Run test suite on the frozen app (file)
-        if: steps.win_onefile.outcome == 'success'
+        if: steps.win_onefile.outcome == 'success' && inputs.unit_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -303,7 +322,7 @@ jobs:
           ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test ${{ inputs.unit_test_args }}
 
       - name: Run test suite on the frozen app (folder)
-        if: steps.win_onedir.outcome == 'success'
+        if: steps.win_onedir.outcome == 'success' && inputs.unit_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -311,7 +330,7 @@ jobs:
           ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test ${{ inputs.unit_test_args }}
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
-        if: steps.win_onefile.outcome == 'success'
+        if: steps.win_onefile.outcome == 'success' && inputs.integration_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -330,6 +349,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup tmate session
+        if: inputs.tmate_debugging == 'true'
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -410,7 +436,7 @@ jobs:
           poetry run ${{ inputs.executable_name }} program --list
 
       - name: Run test suite on the frozen app (file)
-        if: steps.mac_onefile.outcome == 'success'
+        if: steps.mac_onefile.outcome == 'success' && inputs.unit_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -418,7 +444,7 @@ jobs:
           ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test ${{ inputs.unit_test_args }}
 
       - name: Run test suite on the frozen app (folder)
-        if: steps.mac_onedir.outcome == 'success'
+        if: steps.mac_onedir.outcome == 'success' && inputs.unit_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -426,7 +452,7 @@ jobs:
           ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir test ${{ inputs.unit_test_args }}
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
-        if: steps.mac_onefile.outcome == 'success'
+        if: steps.mac_onefile.outcome == 'success' && inputs.integration_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
@@ -442,9 +468,19 @@ jobs:
       folder: ${{ steps.upload-folder.outputs.artifact-url }}
     needs: [status, cache-app-data]
     runs-on: ubuntu-latest
+    env:
+      UNIT_TESTS: ${{ inputs.unit_tests }}
+      INTEGRATION_TESTS: ${{ inputs.unit_tests }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup tmate session
+        if: inputs.tmate_debugging == 'true'
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
       - name: Cache dependencies
         uses: hpcflow/github-support/init-cache@0.3
         with:
@@ -488,12 +524,16 @@ jobs:
             poetry run ${{ inputs.executable_name }} program --list
 
             export PYTHONUNBUFFERED=ok
-            # run test suite on the frozen app (file)
-            ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.unit_test_args }}
+            if [[ "$INTEGRATION_TESTS" == "true" ]]; then
+              # run test suite on the frozen app (file)
+              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.unit_test_args }}
+            fi
 
-            # run integration test suite on the frozen app (file)
-            # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
-            ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.integration_test_args }} --integration
+            if [[ "$INTEGRATION_TESTS" == "true" ]]; then
+              # run integration test suite on the frozen app (file)
+              # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
+              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.integration_test_args }} --integration
+            fi
 
       - name: Build executable (folder) within Docker
         id: linux_onedir
@@ -524,8 +564,10 @@ jobs:
             poetry run ${{ inputs.executable_name }} program --list
 
             export PYTHONUNBUFFERED=ok
-            # run test suite on the frozen app (folder)
-            ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test ${{ inputs.unit_test_args }}
+            if [[ "$UNIT_TESTS" == "true" ]]; then
+              # run test suite on the frozen app (folder)
+              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test ${{ inputs.unit_test_args }}
+            fi
 
       - name: Upload executable artifact (file)
         id: upload-file
