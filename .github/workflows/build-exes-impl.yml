@@ -504,6 +504,9 @@ jobs:
           options: |
             -v ${{ github.workspace }}:/home 
             -u ${{ env.UID }}:${{ env.GID }}
+            --env HOME=/home
+            --env XDG_DATA_HOME=/home/.local/share
+            --env XDG_CACHE_HOME=/home/.cache
             --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
             --env UNIT_TESTS=${{ inputs.unit_tests }}
             --env INTEGRATION_TESTS=${{ inputs.integration_tests }}
