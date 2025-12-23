@@ -255,12 +255,11 @@ jobs:
         run: poetry install --without dev
 
       - name: Configure the app's Python environment # this allows us to run integration tests that use `script_data_in/out: "direct"`
-        env:
-          PYTHONUTF8: 1
+        id: configure_python_env
         run: |
           poetry run ${{ inputs.executable_name }} env setup python --use-current
-          poetry run ${{ inputs.executable_name }} env list
-          poetry run ${{ inputs.executable_name }} env show --label python
+          result=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
+          echo "env_source_file=$result" >> "$GITHUB_OUTPUT"
 
       - name: Build with pyinstaller for Windows (file)
         id: win_onefile
@@ -318,24 +317,27 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          PYTHONUTF8: 1
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test ${{ inputs.unit_test_args }}
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
 
       - name: Run test suite on the frozen app (folder)
         if: steps.win_onedir.outcome == 'success' && inputs.unit_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          PYTHONUTF8: 1
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test ${{ inputs.unit_test_args }}
+          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.win_onefile.outcome == 'success' && inputs.integration_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          PYTHONUTF8: 1
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test ${{ inputs.integration_test_args }} --integration
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.integration_test_args }} --integration
 
   macos:
     name: Build macOS Executables
@@ -381,10 +383,11 @@ jobs:
         run: poetry install --without dev
 
       - name: Configure the app's Python environment # this allows us to run integration tests that use `script_data_in/out: "direct"`
+        id: configure_python_env
         run: |
           poetry run ${{ inputs.executable_name }} env setup python --use-current
-          poetry run ${{ inputs.executable_name }} env list
-          poetry run ${{ inputs.executable_name }} env show --label python
+          result=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
+          echo "env_source_file=$result" >> "$GITHUB_OUTPUT"
 
       - name: Build with pyinstaller for macOS (file)
         id: mac_onefile
@@ -441,7 +444,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test ${{ inputs.unit_test_args }}
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
 
       - name: Run test suite on the frozen app (folder)
         if: steps.mac_onedir.outcome == 'success' && inputs.unit_tests == 'true'
@@ -449,7 +452,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir test ${{ inputs.unit_test_args }}
+          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.mac_onefile.outcome == 'success' && inputs.integration_tests == 'true'
@@ -457,7 +460,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test ${{ inputs.integration_test_args }} --integration
+          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.integration_test_args }} --integration
 
   linux:
     name: Build Linux (Rocky Linux 8) Executables
@@ -500,7 +503,7 @@ jobs:
         if: inputs.build_onefile == 'true'
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest
+          image: ghcr.io/hpcflow/rockylinux8-python:latest # most of the options are just so we can debug (via tmate) when we have a custom pytest --basetemp directory
           options: |
             -v ${{ github.workspace }}:/home 
             -u ${{ env.UID }}:${{ env.GID }}
@@ -519,8 +522,8 @@ jobs:
             # Configure the app's Python environment
             # this allows us to run integration tests that use `script_data_in/out: "direct"`
             poetry run ${{ inputs.executable_name }} env setup python --use-current
-            poetry run ${{ inputs.executable_name }} env list
-            poetry run ${{ inputs.executable_name }} env show --label python
+            ENV_SOURCE_FILE=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
+            echo "ENV_SOURCE_FILE=${ENV_SOURCE_FILE}"
 
             # build with pyinstaller for Rocky Linux (file)
             cd ${{ inputs.pyinstaller_dir }}
@@ -536,13 +539,13 @@ jobs:
             export PYTHONUNBUFFERED=ok
             if [ "$UNIT_TESTS" = "true" ]; then
               # run test suite on the frozen app (file)
-              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.unit_test_args }}
+              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test --with-env-source ${ENV_SOURCE_FILE} ${{ inputs.unit_test_args }}
             fi
 
             if [ "$INTEGRATION_TESTS" == "true" ]; then
               # run integration test suite on the frozen app (file)
               # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
-              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.integration_test_args }} --integration
+              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test --with-env-source ${ENV_SOURCE_FILE} ${{ inputs.integration_test_args }} --integration
             fi
 
       - name: Build executable (folder) within Docker
@@ -561,6 +564,8 @@ jobs:
             # Configure the app's Python environment
             # this allows us to run integration tests that use `script_data_in/out: "direct"`
             poetry run ${{ inputs.executable_name }} env setup python --use-current
+            ENV_SOURCE_FILE=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
+            echo "ENV_SOURCE_FILE=${ENV_SOURCE_FILE}"
 
             # build with pyinstaller for Rocky Linux (folder)
             cd ${{ inputs.pyinstaller_dir }}
@@ -576,7 +581,7 @@ jobs:
             export PYTHONUNBUFFERED=ok
             if [ "$UNIT_TESTS" == "true" ]; then
               # run test suite on the frozen app (folder)
-              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test ${{ inputs.unit_test_args }}
+              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test --with-env-source ${ENV_SOURCE_FILE} ${{ inputs.unit_test_args }}
             fi
 
       - name: Upload executable artifact (file)
