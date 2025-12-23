@@ -490,6 +490,11 @@ jobs:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
+      - name: Store user and group IDs
+        run: |
+          echo "UID=$(id -u)" >> $GITHUB_ENV
+          echo "GID=$(id -g)" >> $GITHUB_ENV
+
       - name: Build executable (file) within Docker
         id: linux_onefile
         if: inputs.build_onefile == 'true'
@@ -498,7 +503,7 @@ jobs:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home 
-            -u $(id -u):$(id -g)
+            -u ${{ env.UID }}:${{ env.GID }}
             --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
             --env UNIT_TESTS=${{ inputs.unit_tests }}
             --env INTEGRATION_TESTS=${{ inputs.integration_tests }}
