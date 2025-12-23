@@ -498,6 +498,7 @@ jobs:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home 
+            -u $(id -u):$(id -g)
             --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
             --env UNIT_TESTS=${{ inputs.unit_tests }}
             --env INTEGRATION_TESTS=${{ inputs.integration_tests }}
