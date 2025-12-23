@@ -468,13 +468,7 @@ jobs:
       folder: ${{ steps.upload-folder.outputs.artifact-url }}
     needs: [status, cache-app-data]
     runs-on: ubuntu-latest
-    env:
-      UNIT_TESTS: ${{ inputs.unit_tests }}
-      INTEGRATION_TESTS: ${{ inputs.integration_tests }}
     steps:
-      - run: |
-          echo "UNIT_TESTS='$UNIT_TESTS'"
-          echo "INTEGRATION_TESTS='$INTEGRATION_TESTS'"
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -502,7 +496,11 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
-          options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          options: |
+            -v ${{ github.workspace }}:/home 
+            --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            --env UNIT_TESTS=${{ inputs.unit_tests }}
+            --env INTEGRATION_TESTS=${{ inputs.integration_tests }}
           run: |
             # set up poetry
             cd /home
