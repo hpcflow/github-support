@@ -258,8 +258,8 @@ jobs:
         id: configure_python_env
         run: |
           poetry run ${{ inputs.executable_name }} env setup python --use-current
-          result=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
-          echo "env_source_file=$result" >> "$GITHUB_OUTPUT"
+          $result = (poetry run ${{ inputs.executable_name }} env info source_file -l python)
+          "env_source_file=$result" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: Build with pyinstaller for Windows (file)
         id: win_onefile
