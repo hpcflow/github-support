@@ -470,8 +470,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UNIT_TESTS: ${{ inputs.unit_tests }}
-      INTEGRATION_TESTS: ${{ inputs.unit_tests }}
+      INTEGRATION_TESTS: ${{ inputs.integration_tests }}
     steps:
+      - run: |
+          echo "UNIT_TESTS='$UNIT_TESTS'"
+          echo "INTEGRATION_TESTS='$INTEGRATION_TESTS'"
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -524,12 +527,12 @@ jobs:
             poetry run ${{ inputs.executable_name }} program --list
 
             export PYTHONUNBUFFERED=ok
-            if [[ "$INTEGRATION_TESTS" == "true" ]]; then
+            if [ "$UNIT_TESTS" = "true" ]; then
               # run test suite on the frozen app (file)
               ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.unit_test_args }}
             fi
 
-            if [[ "$INTEGRATION_TESTS" == "true" ]]; then
+            if [ "$INTEGRATION_TESTS" == "true" ]; then
               # run integration test suite on the frozen app (file)
               # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
               ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test ${{ inputs.integration_test_args }} --integration
@@ -564,7 +567,7 @@ jobs:
             poetry run ${{ inputs.executable_name }} program --list
 
             export PYTHONUNBUFFERED=ok
-            if [[ "$UNIT_TESTS" == "true" ]]; then
+            if [ "$UNIT_TESTS" == "true" ]; then
               # run test suite on the frozen app (folder)
               ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test ${{ inputs.unit_test_args }}
             fi
