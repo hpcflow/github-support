@@ -514,6 +514,8 @@ jobs:
             --env UNIT_TESTS=${{ inputs.unit_tests }}
             --env INTEGRATION_TESTS=${{ inputs.integration_tests }}
           run: |
+            set -e # exit on first failure
+
             # set up poetry
             cd /home
             poetry config virtualenvs.in-project true
@@ -556,6 +558,8 @@ jobs:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           run: |
+            set -e # exit on first failure
+
             # set up poetry
             cd /home
             poetry config virtualenvs.in-project true
