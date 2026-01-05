@@ -288,8 +288,51 @@ jobs:
           name: CHANGELOG_increment
           path: CHANGELOG_increment.md
 
+  cache-app-data:
+    permissions:
+      # No write permission
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Set up poetry
+        uses: hpcflow/github-support/setup-poetry@main
+        with:
+          version: ${{ inputs.poetry-version }}
+
+      - name: Cache dependencies
+        uses: hpcflow/github-support/init-cache@main
+        with:
+          name: test
+          version: ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --without dev,pyinstaller
+
+      - name: Cache all app data and programs
+        run: |
+          poetry run ${{ inputs.executable_name }} data cache --all
+          poetry run ${{ inputs.executable_name }} program cache --all
+
+      - name: Upload all cached app data/programs
+        id: upload-cached-app-data
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ~/.cache/${{ inputs.executable_name }}
+
   build-executables:
-    needs: bump-version
+    needs: [bump-version, cache-app-data]
     strategy:
       fail-fast: false
       matrix:
@@ -303,6 +346,11 @@ jobs:
             executable_os: macOS
 
     runs-on: ${{ matrix.os }}
+    env:
+      BUILT_EXE_BASE_NAME: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}
+      BUILT_EXE_PATH_DIR: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir${{ matrix.executable_ext }}
+      BUILT_EXE_PATH_DIR_ZIPPED: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
+      BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -317,6 +365,13 @@ jobs:
         with:
           name: build
           version: ${{ inputs.python-version }}
+
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
+
       - name: Set up poetry
         uses: hpcflow/github-support/setup-poetry@main
         with:
@@ -330,74 +385,87 @@ jobs:
         working-directory: ${{ inputs.pyinstaller_dir }}
         run: ./make.sh $TARGET INFO 'onefile'
         env:
-          TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}
+          TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}
 
       - name: Build with pyinstaller (non-Windows, folder)
         if: runner.os != 'Windows'
         working-directory: ${{ inputs.pyinstaller_dir }}
         run: ./make.sh $TARGET INFO 'onedir'
         env:
-          TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag}}-${{ matrix.executable_os }}-dir
+          TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir
 
       - name: Build with pyinstaller (Windows, file)
         if: runner.os == 'Windows'
         working-directory: ${{ inputs.pyinstaller_dir }}
         run: ./make.ps1 -ExeName $Env:TARGET -LogLevel INFO -BuildType 'onefile'
         env:
-          TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}
+          TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}
 
       - name: Build with pyinstaller (Windows, folder)
         if: runner.os == 'Windows'
         working-directory: ${{ inputs.pyinstaller_dir }}
         run: ./make.ps1 -ExeName $Env:TARGET -LogLevel INFO -BuildType 'onedir'
         env:
-          TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir
+          TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir
 
       - name: Version check (file)
         uses: hpcflow/github-support/compare@0.3
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
-          command: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }} --version
+          command: ${{ env.BUILT_EXE_PATH_FILE }} --version
 
       - name: Version check (folder)
         uses: hpcflow/github-support/compare@0.3
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
-          command: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir${{ matrix.executable_ext }} --version
+          command: ${{ env.BUILT_EXE_PATH_DIR }}  --version
+
+      - name: Install cached app data
+        env:
+          PYTHONUTF8: 1
+        run: |
+          ${{ env.BUILT_EXE_PATH_DIR }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+          ${{ env.BUILT_EXE_PATH_DIR }} data --list
+          ${{ env.BUILT_EXE_PATH_DIR }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+          ${{ env.BUILT_EXE_PATH_DIR }} program --list
 
       - name: Run test suite on the frozen app (folder)
         env:
           GH_TOKEN: ${{ secrets.general-token }}
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir${{ matrix.executable_ext }} test
+          ${{ env.BUILT_EXE_PATH_DIR }} test
 
       - name: Compress folder (windows, folder)
         if: runner.os == 'Windows'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./compress.ps1 -ExeName '${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir' -BuildType 'onedir'
+        run: ./compress.ps1 -ExeName '${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir' -BuildType 'onedir'
 
       - name: Compress folder (non-windows, folder)
         if: runner.os != 'Windows'
         working-directory: ${{ inputs.pyinstaller_dir }}
         run: ./compress.sh $TARGET 'onedir'
         env:
-          TARGET: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir
+          TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir
 
       - name: Upload executable artifact (file)
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
-          path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
+          name: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
+          path: ${{ env.BUILT_EXE_PATH_FILE }}
 
       - name: Upload executable artifact (compressed folder)
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
-          path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}-dir.zip
+          name: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir.zip
+          path: ${{ env.BUILT_EXE_PATH_DIR_ZIPPED }}
 
   build-executables-linux:
     runs-on: ubuntu-latest
-    needs: bump-version
+    needs: [bump-version, cache-app-data]
+    env:
+      BUILT_EXE_PATH_DIR: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir
+      BUILT_EXE_PATH_DIR_ZIPPED: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
+      BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -409,6 +477,12 @@ jobs:
           name: build
           version: ${{ inputs.python-version }}
 
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ inputs.executable_name }}-app-data-cache
+          path: ${{ inputs.executable_name }}-app-data-cache
+
       - name: Build executables within Docker
         uses: addnab/docker-run-action@v3
         with:
@@ -419,53 +493,58 @@ jobs:
             cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev
-            base="${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}"
             vers_expected="${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
 
             # build with pyinstaller for Rocky Linux (file)
             cd ${{ inputs.pyinstaller_dir }}
-            ./make.sh ${base}-linux INFO onefile
+            ./make.sh ${{ env.BUILT_EXE_BASE_NAME }}-linux INFO onefile
             cd ..
 
             # version check (file)
-            vers=$(${{ inputs.pyinstaller_dir }}/dist/onefile/${base}-linux --version)
+            vers=$(${{ env.BUILT_EXE_PATH_FILE }} --version)
             echo $vers
             echo $vers_expected
             [ "$vers" = "$vers_expected" ]
 
+            # install cache data
+            ${{ env.BUILT_EXE_PATH_FILE }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+            ${{ env.BUILT_EXE_PATH_FILE }} data --list
+            ${{ env.BUILT_EXE_PATH_FILE }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+            ${{ env.BUILT_EXE_PATH_FILE }} program --list
+
             # run test suite on the frozen app (file)
-            ${{ inputs.pyinstaller_dir }}/dist/onefile/${base}-linux test
+            ${{ env.BUILT_EXE_PATH_FILE }} test
 
             # build with pyinstaller for Rocky Linux (folder)
             cd ${{ inputs.pyinstaller_dir }}
-            ./make.sh ${base}-linux-dir INFO onedir
+            ./make.sh ${{ env.BUILT_EXE_BASE_NAME }}-linux-dir INFO onedir
             cd ..
 
             # version check (folder)
-            vers=$(${{ inputs.pyinstaller_dir }}/dist/onedir/${base}-linux-dir/${base}-linux-dir --version)
+            vers=$(${{ env.BUILT_EXE_PATH_DIR }} --version)
             echo $vers
             echo $vers_expected
             [ "$vers" = "$vers_expected" ]
 
             # run test suite on the frozen app (folder)
-            ${{ inputs.pyinstaller_dir }}/dist/onedir/${base}-linux-dir/${base}-linux-dir test
+            ${{ env.BUILT_EXE_PATH_DIR }} test
 
             # Compress folder (folder)
             cd ${{ inputs.pyinstaller_dir }}
-            ./compress.sh ${base}-linux-dir 'onedir'
+            ./compress.sh ${{ env.BUILT_EXE_BASE_NAME }}-linux-dir 'onedir'
             cd ..
 
       - name: Upload executable artifact (file)
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
-          path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
+          name: ${{ env.BUILT_EXE_BASE_NAME }}-linux
+          path: ${{ env.BUILT_EXE_PATH_FILE }}
 
       - name: Upload executable artifact (compressed folder)
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
-          path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux-dir.zip
+          name: ${{ env.BUILT_EXE_BASE_NAME }}-linux-dir.zip
+          path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ env.BUILT_EXE_BASE_NAME }}-linux-dir.zip
 
   make-workflow-benchmark:
     needs: bump-version

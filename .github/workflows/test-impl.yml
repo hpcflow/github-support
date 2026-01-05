@@ -203,7 +203,7 @@ jobs:
         uses: hpcflow/github-support/init-cache@main
         with:
           name: test
-          version: ${{ matrix.python-version }}
+          version: "3.13"
 
       - name: Install dependencies
         timeout-minutes: ${{ inputs.install-timeout-minutes }}
