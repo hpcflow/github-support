@@ -380,6 +380,15 @@ jobs:
       - name: Install dependencies
         run: poetry install --without dev
 
+      - name: Install cached app data
+        env:
+          PYTHONUTF8: 1
+        run: |
+          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
+          poetry run ${{ inputs.executable_name }} data --list
+          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
+          poetry run ${{ inputs.executable_name }} program --list
+
       - name: Build with pyinstaller (non-Windows, file)
         if: runner.os != 'Windows'
         working-directory: ${{ inputs.pyinstaller_dir }}
@@ -419,15 +428,6 @@ jobs:
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
           command: ${{ env.BUILT_EXE_PATH_DIR }}  --version
-
-      - name: Install cached app data
-        env:
-          PYTHONUTF8: 1
-        run: |
-          ${{ env.BUILT_EXE_PATH_DIR }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          ${{ env.BUILT_EXE_PATH_DIR }} data --list
-          ${{ env.BUILT_EXE_PATH_DIR }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-          ${{ env.BUILT_EXE_PATH_DIR }} program --list
 
       - name: Run test suite on the frozen app (folder)
         env:
