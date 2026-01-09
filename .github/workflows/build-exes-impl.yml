@@ -201,8 +201,7 @@ jobs:
 
       - name: Cache all app data and programs
         run: |
-          poetry run ${{ inputs.executable_name }} data cache --all
-          poetry run ${{ inputs.executable_name }} program cache --all
+          poetry run ${{ inputs.executable_name }} manage cache-all
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
