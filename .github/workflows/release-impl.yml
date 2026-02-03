@@ -289,6 +289,8 @@ jobs:
           path: CHANGELOG_increment.md
 
   cache-app-data:
+    # skip if '[skip release]' is in the PR title; or if merging any branch other than pre_release_branch into release_branch
+    if: "!contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch))"
     permissions:
       # No write permission
       contents: read
