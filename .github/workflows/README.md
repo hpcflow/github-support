@@ -5,7 +5,7 @@ To use one, put something like this in your _Github Actions_ workfow:
 ```
 jobs:
   some-name:
-    uses: hpcflow/github-support/.github/workflows/the-workflow-name.yml@main
+    uses: hpcflow/github-support/.github/workflows/the-workflow-name.yml@0.4
     with:
       argument-1: argument-value
       argument-2: ...

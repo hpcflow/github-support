@@ -175,12 +175,12 @@ jobs:
           python-version: ${{ inputs.python-version }}
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@main
+        uses: hpcflow/github-support/setup-poetry@0.4
         with:
           version: ${{ inputs.poetry-version }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@main
+        uses: hpcflow/github-support/init-cache@0.4
         with:
           name: test
           version: ${{ inputs.python-version }}
@@ -234,7 +234,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.3
+        uses: hpcflow/github-support/init-cache@0.4
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
@@ -246,7 +246,7 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@main
+        uses: hpcflow/github-support/setup-poetry@0.4
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -362,7 +362,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.3
+        uses: hpcflow/github-support/init-cache@0.4
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
@@ -374,7 +374,7 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@main
+        uses: hpcflow/github-support/setup-poetry@0.4
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -481,7 +481,7 @@ jobs:
           detached: true
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.3
+        uses: hpcflow/github-support/init-cache@0.4
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
@@ -504,7 +504,7 @@ jobs:
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest # most of the options are just so we can debug (via tmate) when we have a custom pytest --basetemp directory
           options: |
-            -v ${{ github.workspace }}:/home 
+            -v ${{ github.workspace }}:/home
             -u ${{ env.UID }}:${{ env.GID }}
             --env HOME=/home
             --env XDG_DATA_HOME=/home/.local/share
