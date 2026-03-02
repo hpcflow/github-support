@@ -120,7 +120,7 @@ jobs:
         working-directory: docs
       - name: Upload documentation artifact
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
           path: docs/build/html
