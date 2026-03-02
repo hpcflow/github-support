@@ -368,7 +368,7 @@ jobs:
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -479,7 +479,7 @@ jobs:
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -611,7 +611,7 @@ jobs:
         run: |
           mkdir benchmarks
       - name: Load benchmark data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           merge-multiple: true
           path: benchmarks
@@ -667,7 +667,7 @@ jobs:
         run: mkdir release-artifacts
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: release-artifacts
 
@@ -802,7 +802,7 @@ jobs:
         uses: hpcflow/github-support/configure-git@0.4
 
       - name: Download documentation artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: docs_html
           path: docs/${{ needs.bump-version.outputs.new_tag }}

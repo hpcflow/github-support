@@ -240,7 +240,7 @@ jobs:
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -368,7 +368,7 @@ jobs:
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -487,7 +487,7 @@ jobs:
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
