@@ -282,7 +282,7 @@ jobs:
           new_tag: ${{ steps.new_tag.outputs.tag }}
 
       - name: Store the incremental CHANGELOG
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         id: upload-changelog
         with:
           name: CHANGELOG_increment
@@ -327,7 +327,7 @@ jobs:
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ~/.cache/${{ inputs.executable_name }}
@@ -449,13 +449,13 @@ jobs:
           TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir
 
       - name: Upload executable artifact (file)
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
           path: ${{ env.BUILT_EXE_PATH_FILE }}
 
       - name: Upload executable artifact (compressed folder)
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir.zip
           path: ${{ env.BUILT_EXE_PATH_DIR_ZIPPED }}
@@ -536,13 +536,13 @@ jobs:
             cd ..
 
       - name: Upload executable artifact (file)
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.BUILT_EXE_BASE_NAME }}-linux
           path: ${{ env.BUILT_EXE_PATH_FILE }}
 
       - name: Upload executable artifact (compressed folder)
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.BUILT_EXE_BASE_NAME }}-linux-dir.zip
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ env.BUILT_EXE_BASE_NAME }}-linux-dir.zip
@@ -591,7 +591,7 @@ jobs:
           poetry run ${{ inputs.executable_name }} --timeit-file benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt make ${{ inputs.benchmark_make_workflow }} --var N ${{ matrix.num_elements }}
 
       - name: Store benchmark data
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt
           path: benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt
@@ -619,7 +619,7 @@ jobs:
         run: |
           zip -r ./benchmarks.zip benchmarks
       - name: Store compound benchmark data
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: benchmarks.zip
           path: benchmarks.zip
@@ -776,7 +776,7 @@ jobs:
         working-directory: docs
 
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: docs_html
           path: docs/build/html
