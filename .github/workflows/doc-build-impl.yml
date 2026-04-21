@@ -125,6 +125,7 @@ jobs:
           name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
           path: docs/build/html
           if-no-files-found: error
+          retention-days: ${{ inputs.deploy && 1 || 7 }}
 
   deploy:
     # New style doc uploader
