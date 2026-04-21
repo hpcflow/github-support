@@ -220,6 +220,7 @@ jobs:
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ~/.cache/${{ inputs.executable_name }}
+          retention-days: 1
 
   test-units:
     needs: [pre-commit, cache-app-data]
@@ -313,7 +314,9 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
-          options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          options: |
+            -v ${{ github.workspace }}:/home
+            --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           run: |
             cd /home
             poetry config virtualenvs.in-project true
@@ -417,7 +420,9 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
-          options: -v ${{ github.workspace }}:/home --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          options: |
+            -v ${{ github.workspace }}:/home
+            --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           run: |
             cd /home
             poetry config virtualenvs.in-project true
@@ -732,3 +737,17 @@ jobs:
           ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
           python -m ipykernel install --user --name python3
           papermill github-support\scripts\test_direct_sub_jupyter_notebook.ipynb papermill_out\test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
+
+  cleanup-cache:
+    needs:
+      - test-units
+      - test-units-RockyLinux
+      - test-integration
+      - test-integration-RockyLinux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete cache artifact
+        uses: geekyeggo/delete-artifact@v6
+        with:
+          name: "*-app-data-cache"
+          failOnError: false

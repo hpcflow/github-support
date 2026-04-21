@@ -111,11 +111,16 @@ jobs:
       - name: Make directory
         run: |
           mkdir benchmarks
-      - name: Fetch benchmark files
+      - name: Fetch benchmark data
         uses: actions/download-artifact@v8
         with:
           merge-multiple: true
           path: benchmarks
+      - name: Delete partial benchmark data
+        uses: geekyeggo/delete-artifact@v6
+        with:
+          name: "*"
+          failOnError: false
       - name: Store benchmark data archive
         uses: actions/upload-artifact@v7
         id: upload
