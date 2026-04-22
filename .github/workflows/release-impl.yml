@@ -299,7 +299,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.pr-head-ref }}
+          ref: ${{ inputs.pr-base-ref }}
 
       - name: Set up python
         uses: actions/setup-python@v6
