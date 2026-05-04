@@ -216,7 +216,7 @@ jobs:
               new_version='$cur_tag'.lstrip('v'),
               version_files=['pyproject.toml', '${{ inputs.version_file }}'],
               check_consistency=True,
-              encoding="utf-8",
+              encoding='utf-8',
           )"
           cz bump
         env:
