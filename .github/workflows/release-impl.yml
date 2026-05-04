@@ -214,7 +214,7 @@ jobs:
           update_version_in_files(
               current_version='$pre_tag'.lstrip('v'),
               new_version='$cur_tag'.lstrip('v'),
-              files=['pyproject.toml', '${{ inputs.version_file }}'],
+              version_files=['pyproject.toml', '${{ inputs.version_file }}'],
           )"
           cz bump
         env:
