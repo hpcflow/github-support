@@ -81,30 +81,35 @@ on:
         description: >
           Attribute: `github.run_attempt`
           Which attempt at running the workflow is this?
+        default: ${{ github.run_attempt }}
       pr-merged:
         required: true
         type: string
         description: >
           Attribute: `github.event.pull_request.merged`
           Is this running as the result of a PR being merged?
+        default: ${{ github.event.pull_request.merged }}
       pr-title:
         required: true
         type: string
         description: >
           Attribute: `github.event.pull_request.title`
           What is the title of the PR that was merged?
+        default: ${{ github.event.pull_request.title }}
       pr-base-ref:
         required: true
         type: string
         description: >
           Attribute: `github.event.pull_request.base.ref`
           Where was the PR merged into?
+        default: ${{ github.event.pull_request.base.ref }}
       pr-head-ref:
         required: true
         type: string
         description: >
           Attribute: `github.event.pull_request.head.ref`
           Where was the PR merged from?
+        default: ${{ github.event.pull_request.head.ref }}
       python-version:
         description: >
           Version of Python to use.
@@ -157,7 +162,7 @@ on:
 jobs:
   bump-version:
     # skip if trying to re-run; PR is closed without merging; '[skip release]' is in the PR title; or if merging any branch other than pre_release_branch into release_branch
-    if: inputs.gh-run-attempt == '1' && inputs.pr-merged == 'true' && !contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch))
+    if: inputs.gh-run-attempt == '1' && inputs.pr-merged == 'true' && !contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch)) && (!(github.event && github.event.pull_request) || github.event.pull_request.merged)
     runs-on: ubuntu-latest
     outputs:
       new_tag: ${{ steps.new_tag.outputs.tag }}
@@ -292,7 +297,7 @@ jobs:
 
   cache-app-data:
     # skip if '[skip release]' is in the PR title; or if merging any branch other than pre_release_branch into release_branch
-    if: "!contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch))"
+    if: "!contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch)) && (!(github.event && github.event.pull_request) || github.event.pull_request.merged)"
     permissions:
       # No write permission
       contents: read
