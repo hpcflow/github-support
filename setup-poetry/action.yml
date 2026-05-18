@@ -24,7 +24,7 @@ runs:
     - name: Install
       shell: bash
       run: |
-        python -m pip install poetry==$VERSION
+        python -m pip install "poetry==$VERSION"
       env:
         VERSION: ${{ inputs.version }}
     - name: Configure

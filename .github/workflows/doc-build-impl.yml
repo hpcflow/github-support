@@ -85,42 +85,48 @@ jobs:
       artifact-url: ${{ steps.upload.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Checkout support code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
+          persist-credentials: false
       - name: Init Python ${{ inputs.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ inputs.python-version }}
       - name: Install and configure poetry ${{ inputs.poetry-version }}
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache Virtual Environment
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: sphinx
           version: ${{ inputs.python-version }}
       - name: Install Dependencies
         run: |
-          poetry install ${{ inputs.install-args }}
+          poetry install $Args
+        env:
+          Args: ${{ inputs.install-args }}
       - name: Configure Problem Matcher
         run: echo "::add-matcher::github-support/problem-matchers/sphinx.json"
         # See: https://github.com/actions/toolkit/blob/main/docs/problem-matchers.md
         # See: https://github.com/python/cpython/pull/20325
       - name: Run Sphinx
         run: |
-          poetry run make clean html ${{ inputs.sphinx-args }}
+          poetry run make clean html $Args
+        env:
+          Args: ${{ inputs.sphinx-args }}
         working-directory: docs
       - name: Upload documentation artifact
         id: upload
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
           path: docs/build/html
@@ -146,17 +152,17 @@ jobs:
       page-url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download documentation artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: site
           merge-multiple: true
       - name: Setup GitHub Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Upload artifact to documentation staging
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           # Upload dist repository
           path: site
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

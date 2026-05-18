@@ -46,21 +46,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test
           version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -70,6 +71,7 @@ jobs:
 
       - name: Run tests
         run: |
-          poetry run python -m pytest ${{ inputs.pytest-args }}
+          poetry run python -m pytest $ARGUMENTS
         env:
           PYTHONUNBUFFERED: ok
+          ARGUMENTS: ${{ inputs.pytest-args }}

@@ -146,16 +146,17 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           token: ${{ secrets.pre-commit-token }}
           # checkout PR source branch (head_ref) if event is pull_request:
           ref: ${{ inputs.head-ref || inputs.ref }}
           repository: ${{ inputs.full-repo-name }}
+          persist-credentials: true
       - name: Configure git for commits
-        uses: hpcflow/github-support/configure-git@0.5
+        uses: hpcflow/github-support/configure-git@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
       - name: Set up python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
@@ -184,23 +185,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
 
       - name: Set up python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test
           version: "3.13"
@@ -212,11 +214,13 @@ jobs:
 
       - name: Cache all app data and programs
         run: |
-          poetry run python -m ${{ inputs.CLI_module }} manage cache-all
+          poetry run python -m "$CLI_MODULE" manage cache-all
+        env:
+          CLI_MODULE: ${{ inputs.CLI_module }}
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ~/.cache/${{ inputs.executable_name }}
@@ -239,27 +243,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test
           version: ${{ matrix.python-version }}
@@ -272,19 +277,23 @@ jobs:
       - name: Install cached app data
         env:
           PYTHONUTF8: 1
+          EXE_NAME: ${{ inputs.executable_name }}
         run: |
-          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          poetry run ${{ inputs.executable_name }} data --list
-          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-          poetry run ${{ inputs.executable_name }} program --list
+          poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+          poetry run "$EXE_NAME" data --list
+          poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+          poetry run "$EXE_NAME" program --list
 
       - name: Run tests
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          EXE_NAME: ${{ inputs.executable_name }}
+          PYTEST_ARGS: ${{ inputs.pytest_args }}
+          UT_ARGS: ${{ inputs.unit_test_args }}
         run: |
-          poetry run ${{ inputs.executable_name }} test ${{ inputs.pytest_args }} ${{ inputs.unit_test_args }}
+          poetry run "$EXE_NAME" test $PYTEST_ARGS $UT_ARGS
 
   test-units-RockyLinux:
     needs: [pre-commit, cache-app-data]
@@ -295,38 +304,43 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test
           version: RockyLinux
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Run unit tests within Docker
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            --env GH_TOKEN --env EXE_NAME --env UT_ARGS
           run: |
             cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev,pyinstaller
-            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-            poetry run ${{ inputs.executable_name }} data --list
-            poetry run ${{ inputs.executable_name }} program --list
+            poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+            poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+            poetry run "$EXE_NAME" data --list
+            poetry run "$EXE_NAME" program --list
             export PYTHONUNBUFFERED=ok
-            poetry run ${{ inputs.executable_name }} test ${{ inputs.unit_test_args }}
+            poetry run "$EXE_NAME" test $UT_ARGS
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXE_NAME: ${{ inputs.executable_name }}
+          UT_ARGS: ${{ inputs.unit_test_args }}
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
 
   test-integration:
@@ -346,26 +360,27 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test-integration
           version: ${{ matrix.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -378,19 +393,23 @@ jobs:
       - name: Install cached app data
         env:
           PYTHONUTF8: 1
+          EXE_NAME: ${{ inputs.executable_name }}
         run: |
-          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          poetry run ${{ inputs.executable_name }} data --list
-          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-          poetry run ${{ inputs.executable_name }} program --list
+          poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+          poetry run "$EXE_NAME" data --list
+          poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+          poetry run "$EXE_NAME" program --list
 
       - name: Run integration tests
         timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          EXE_NAME: ${{ inputs.executable_name }}
+          PYTEST_ARGS: ${{ inputs.pytest_args }}
+          IT_ARGS: ${{ inputs.integration_test_args }}
         run: |
-          poetry run ${{ inputs.executable_name }} test ${{ inputs.pytest_args }} --integration ${{ inputs.integration_test_args }}
+          poetry run "$EXE_NAME" test $PYTEST_ARGS --integration $IT_ARGS
 
   test-integration-RockyLinux:
     needs: [pre-commit, cache-app-data]
@@ -401,38 +420,43 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test-integration
           version: RockyLinux
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Run integration tests within Docker
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            --env GH_TOKEN --env EXE_NAME --env IT_ARGS
           run: |
             cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev,pyinstaller
-            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-            poetry run ${{ inputs.executable_name }} data --list
-            poetry run ${{ inputs.executable_name }} program --list
+            poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+            poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+            poetry run "$EXE_NAME" data --list
+            poetry run "$EXE_NAME" program --list
             export PYTHONUNBUFFERED=ok
-            poetry run ${{ inputs.executable_name }} test --integration ${{ inputs.integration_test_args }}
+            poetry run "$EXE_NAME" test --integration $IT_ARGS
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXE_NAME: ${{ inputs.executable_name }}
+          IT_ARGS: ${{ inputs.integration_test_args }}
         timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}
 
   test-invocation-ubuntu:
@@ -447,27 +471,29 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Checkout supporting test infrastructure
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
+          persist-credentials: false
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -488,57 +514,83 @@ jobs:
           PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python ./${{ inputs.CLI_path }} internal get-invoc-cmd
+          init: source "$POETRY_PATH/bin/activate"
+          command: python "./${CLI_PATH}" internal get-invoc-cmd
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          CLI_PATH: ${{ inputs.CLI_path }}
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python -m ${{ inputs.CLI_module }} internal get-invoc-cmd
+          init: source "$POETRY_PATH/bin/activate"
+          command: python -m "$CLI_MODULE" internal get-invoc-cmd
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          CLI_MODULE: ${{ inputs.CLI_module }}
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: ${{ inputs.executable_name }} internal get-invoc-cmd
+          init: source "$POETRY_PATH/bin/activate"
+          command: |
+            "$EXE_NAME" internal get-invoc-cmd
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Test invocation command within a python script
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python github-support/scripts/get_invoc_cmd.py ${{ inputs.app_package }}
+          init: source "$POETRY_PATH/bin/activate"
+          command: python github-support/scripts/get_invoc_cmd.py "$APP_PKG"
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive python
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python github-support/scripts/get_invoc_cmd_interactive.py python ${{ inputs.app_package }}
+          init: source "$POETRY_PATH/bin/activate"
+          command: python github-support/scripts/get_invoc_cmd_interactive.py python "$APP_PKG"
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive ipython
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python github-support/scripts/get_invoc_cmd_interactive.py ipython ${{ inputs.app_package }}
+          init: source "$POETRY_PATH/bin/activate"
+          command: python github-support/scripts/get_invoc_cmd_interactive.py ipython "$APP_PKG"
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a python script
         run: |
-          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          python github-support/scripts/test_direct_sub_python_script.py ${{ inputs.app_package }}
+          source "$POETRY_PATH/bin/activate"
+          python github-support/scripts/test_direct_sub_python_script.py "$APP_PKG"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a Jupyter notebook (via papermill)
         run: |
-          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
+          source "$POETRY_PATH/bin/activate"
           python -m ipykernel install --user --name python3
-          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb papermill_out/test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
+          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb "papermill_out/test_direct_sub_jupyter_notebook_${PY_VER}_${RUNNER_OS}.ipynb" -p app_import_str "$APP_PKG"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
+          PY_VER: ${{ matrix.python-version }}
 
   test-invocation-macos:
     if: inputs.invocation_tests == 'true'
@@ -552,27 +604,29 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Checkout supporting test infrastructure
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
+          persist-credentials: false
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -593,57 +647,83 @@ jobs:
           PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python ./${{ inputs.CLI_path }} internal get-invoc-cmd
+          init: source "$POETRY_PATH/bin/activate"
+          command: python "./${CLI_PATH}" internal get-invoc-cmd
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          CLI_PATH: ${{ inputs.CLI_path }}
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python -m ${{ inputs.CLI_module }} internal get-invoc-cmd
+          init: source "$POETRY_PATH/bin/activate"
+          command: python -m "$CLI_MODULE" internal get-invoc-cmd
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          CLI_MODULE: ${{ inputs.CLI_module }}
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: ${{ inputs.executable_name }} internal get-invoc-cmd
+          init: source "$POETRY_PATH/bin/activate"
+          command: |
+            "$EXE_NAME" internal get-invoc-cmd
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Test invocation command within a python script
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python github-support/scripts/get_invoc_cmd.py ${{ inputs.app_package }}
+          init: source "$POETRY_PATH/bin/activate"
+          command: python github-support/scripts/get_invoc_cmd.py "$APP_PKG"
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive python
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python github-support/scripts/get_invoc_cmd_interactive.py python ${{ inputs.app_package }}
+          init: source "$POETRY_PATH/bin/activate"
+          command: python github-support/scripts/get_invoc_cmd_interactive.py python "$APP_PKG"
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive ipython
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          command: python github-support/scripts/get_invoc_cmd_interactive.py ipython ${{ inputs.app_package }}
+          init: source "$POETRY_PATH/bin/activate"
+          command: python github-support/scripts/get_invoc_cmd_interactive.py ipython "$APP_PKG"
           expected: "('${{ steps.poetry.outputs.python-path }}', '${{ github.workspace }}/${{ inputs.CLI_path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a python script
         run: |
-          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
-          python github-support/scripts/test_direct_sub_python_script.py ${{ inputs.app_package }}
+          source "$POETRY_PATH/bin/activate"
+          python github-support/scripts/test_direct_sub_python_script.py "$APP_PKG"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a Jupyter notebook (via papermill)
         run: |
-          source ${{ steps.poetry.outputs.poetry-path }}/bin/activate
+          source "$POETRY_PATH/bin/activate"
           python -m ipykernel install --user --name python3
-          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb papermill_out/test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
+          papermill github-support/scripts/test_direct_sub_jupyter_notebook.ipynb "papermill_out/test_direct_sub_jupyter_notebook_${PY_VER}_${RUNNER_OS}.ipynb" -p app_import_str "$APP_PKG"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
+          PY_VER: ${{ matrix.python-version }}
 
   test-invocation-windows:
     if: inputs.invocation_tests == 'true'
@@ -657,27 +737,29 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Checkout supporting test infrastructure
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
+          persist-credentials: false
       - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -700,43 +782,63 @@ jobs:
           PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
-          command: python ./${{ inputs.CLI_path }} internal get-invoc-cmd
+          init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
+          command: python "./$Env:CLI_PATH" internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          CLI_PATH: ${{ inputs.CLI_path }}
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
-          command: python -m ${{ inputs.CLI_module }} internal get-invoc-cmd
+          init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
+          command: python -m "$Env:CLI_MODULE" internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          CLI_MODULE: ${{ inputs.CLI_module }}
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
-          command: ${{ inputs.executable_name }} internal get-invoc-cmd
+          init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
+          command: |
+            "$Env:EXE_NAME" internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Test invocation command within a python script
-        uses: hpcflow/github-support/compare@0.5
+        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
-          init: ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
-          command: python github-support\scripts\get_invoc_cmd.py ${{ inputs.app_package }}
+          init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
+          command: python github-support\scripts\get_invoc_cmd.py "$Env:APP_PKG"
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a python script
         run: |
-          ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
-          python github-support\scripts\test_direct_sub_python_script.py ${{ inputs.app_package }}
+          ."$Env:POETRY_PATH\Scripts\activate.ps1"
+          python github-support\scripts\test_direct_sub_python_script.py "$Env:APP_PKG"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
 
       - name: Test direct workflow submission within a Jupyter notebook (via papermill)
         run: |
-          ."${{ steps.poetry.outputs.poetry-path }}\Scripts\activate.ps1"
+          ."$Env:POETRY_PATH\Scripts\activate.ps1"
           python -m ipykernel install --user --name python3
-          papermill github-support\scripts\test_direct_sub_jupyter_notebook.ipynb papermill_out\test_direct_sub_jupyter_notebook_${{ matrix.python-version }}_${{ runner.os }}.ipynb -p app_import_str ${{ inputs.app_package }}
+          papermill github-support\scripts\test_direct_sub_jupyter_notebook.ipynb "papermill_out\test_direct_sub_jupyter_notebook_$($Env:PY_VER)_$($Env:RUNNER_OS).ipynb" -p app_import_str "$Env:APP_PKG"
+        env:
+          POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
+          APP_PKG: ${{ inputs.app_package }}
+          PY_VER: ${{ matrix.python-version }}
 
   cleanup-cache:
     needs:
@@ -747,7 +849,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete cache artifact
-        uses: geekyeggo/delete-artifact@v6
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         with:
           name: "*-app-data-cache"
           failOnError: false

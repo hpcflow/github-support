@@ -142,13 +142,14 @@ jobs:
       sha: ${{ steps.info.outputs.sha }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0 # get all history and tags
+          persist-credentials: false
       - name: Get executable version name and store git SHA
         id: info
         run: |
-          CUR_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          CUR_TAG="$(git describe --tags $(git rev-list --tags --max-count=1))"
           echo "CUR_TAG is: $CUR_TAG"
           echo "cur_tag=$CUR_TAG" >> $GITHUB_OUTPUT
           vers=$(git describe --tags)
@@ -166,22 +167,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ needs.status.outputs.sha }}
+          persist-credentials: false
 
       - name: Set up python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ inputs.python-version }}
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test
           version: ${{ inputs.python-version }}
@@ -193,20 +195,28 @@ jobs:
       - name: Set data dir # in case we have a custom tag to use
         if: inputs.config_data_dir != ''
         run: |
-          poetry run ${{ inputs.executable_name }} config set data_dir ${{ inputs.config_data_dir }}
+          poetry run "$EXE_NAME" config set data_dir "$Dir"
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}
+          Dir: ${{ inputs.config_data_dir }}
 
       - name: Set program dir # in case we have a custom tag to use
         if: inputs.config_program_dir != ''
         run: |
-          poetry run ${{ inputs.executable_name }} config set program_dir ${{ inputs.config_program_dir }}
+          poetry run "$EXE_NAME" config set program_dir "$Dir"
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}
+          Dir: ${{ inputs.config_program_dir }}
 
       - name: Cache all app data and programs
         run: |
-          poetry run ${{ inputs.executable_name }} manage cache-all
+          poetry run "$EXE_NAME" manage cache-all
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ~/.cache/${{ inputs.executable_name }}
@@ -223,32 +233,34 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup tmate session
         if: inputs.tmate_debugging == 'true'
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
         with:
           detached: true
 
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -258,26 +270,34 @@ jobs:
       - name: Configure the app's Python environment # this allows us to run integration tests that use `script_data_in/out: "direct"`
         id: configure_python_env
         run: |
-          poetry run ${{ inputs.executable_name }} env setup python --use-current
-          $result = (poetry run ${{ inputs.executable_name }} env info source_file -l python)
+          poetry run "$env:EXE_NAME" env setup python --use-current
+          $result = (poetry run "$env:EXE_NAME" env info source_file -l python)
           "env_source_file=$result" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Build with pyinstaller for Windows (file)
         id: win_onefile
         if: inputs.build_onefile == 'true'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./make.ps1 -ExeName "${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win" -LogLevel ${{ inputs.logLevel }} -BuildType 'onefile'
+        run: ./make.ps1 -ExeName "$env:EXE_NAME" -LogLevel "env:LOG_LEVEL" -BuildType 'onefile'
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
+          LOG_LEVEL: ${{ inputs.logLevel }}
 
       - name: Build with pyinstaller for Windows (folder)
         id: win_onedir
         if: inputs.build_onedir == 'true'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./make.ps1 -ExeName "${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir" -LogLevel ${{ inputs.logLevel }} -BuildType 'onedir'
+        run: ./make.ps1 -ExeName "$env:EXE_NAME" -LogLevel "$env:LOG_LEVEL" -BuildType 'onedir'
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
+          LOG_LEVEL: ${{ inputs.logLevel }}
 
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.win_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
@@ -286,7 +306,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
@@ -294,7 +314,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
@@ -302,7 +322,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
@@ -311,11 +331,12 @@ jobs:
       - name: Install cached app data
         env:
           PYTHONUTF8: 1
+          EXE_NAME: ${{ inputs.executable_name }}
         run: |
-          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          poetry run ${{ inputs.executable_name }} data --list
-          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-          poetry run ${{ inputs.executable_name }} program --list
+          poetry run $env:EXE_NAME data install-cache "$($env:EXE_NAME)-app-data-cache/data"
+          poetry run $env:EXE_NAME data --list
+          poetry run $env:EXE_NAME program install-cache "$(env:EXE_NAME)-app-data-cache/programs"
+          poetry run $env:EXE_NAME program --list
 
       - name: Run test suite on the frozen app (file)
         if: steps.win_onefile.outcome == 'success' && inputs.unit_tests == 'true'
@@ -323,8 +344,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
           PYTHONUTF8: 1
+          EXE_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
+          ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
+          ARGS: ${{ inputs.unit_test_args }}
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
+          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
 
       - name: Run test suite on the frozen app (folder)
         if: steps.win_onedir.outcome == 'success' && inputs.unit_tests == 'true'
@@ -332,8 +356,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
           PYTHONUTF8: 1
+          EXE_FILE: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe
+          ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
+          ARGS: ${{ inputs.unit_test_args }}
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir.exe test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
+          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.win_onefile.outcome == 'success' && inputs.integration_tests == 'true'
@@ -341,8 +368,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
           PYTHONUTF8: 1
+          EXE_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
+          ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
+          ARGS: ${{ inputs.integration_test_args }}
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.integration_test_args }} --integration
+          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS --integration
 
   macos:
     name: Build macOS Executables
@@ -355,32 +385,34 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup tmate session
         if: inputs.tmate_debugging == 'true'
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
         with:
           detached: true
 
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -390,26 +422,34 @@ jobs:
       - name: Configure the app's Python environment # this allows us to run integration tests that use `script_data_in/out: "direct"`
         id: configure_python_env
         run: |
-          poetry run ${{ inputs.executable_name }} env setup python --use-current
-          result=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
+          poetry run "$EXE_NAME" env setup python --use-current
+          result=$(poetry run "$EXE_NAME" env info source_file -l python)
           echo "env_source_file=$result" >> "$GITHUB_OUTPUT"
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Build with pyinstaller for macOS (file)
         id: mac_onefile
         if: inputs.build_onefile == 'true'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS ${{ inputs.logLevel }} 'onefile'
+        run: ./make.sh "$TARGET" "$LOG_LEVEL" 'onefile'
+        env:
+          TARGET: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
+          LOG_LEVEL: ${{ inputs.logLevel }}
 
       - name: Build with pyinstaller for macOS (folder)
         id: mac_onedir
         if: inputs.build_onedir == 'true'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir ${{ inputs.logLevel }} 'onedir'
+        run: ./make.sh "$TARGET" "$LOG_LEVEL" 'onedir'
+        env:
+          TARGET: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
+          LOG_LEVEL: ${{ inputs.logLevel }}
 
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.mac_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -418,7 +458,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
@@ -426,7 +466,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
@@ -434,7 +474,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -442,34 +482,45 @@ jobs:
 
       - name: Install cached app data
         run: |
-          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          poetry run ${{ inputs.executable_name }} data --list
-          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-          poetry run ${{ inputs.executable_name }} program --list
+          poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+          poetry run "$EXE_NAME" data --list
+          poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+          poetry run "$EXE_NAME" program --list
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Run test suite on the frozen app (file)
         if: steps.mac_onefile.outcome == 'success' && inputs.unit_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          TARGET: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
+          ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
+          UT_ARGS: ${{ inputs.unit_test_args }}
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
+          "$TARGET" test --with-env-source "$ENV_SRC" $UT_ARGS
 
       - name: Run test suite on the frozen app (folder)
         if: steps.mac_onedir.outcome == 'success' && inputs.unit_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          TARGET: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
+          ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
+          UT_ARGS: ${{ inputs.unit_test_args }}
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.unit_test_args }}
+          "$TARGET" test --with-env-source "$ENV_SRC" $UT_ARGS
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.mac_onefile.outcome == 'success' && inputs.integration_tests == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
+          TARGET: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
+          ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
+          IT_ARGS: ${{ inputs.integration_test_args }}
         run: |
-          ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS test --with-env-source ${{ steps.configure_python_env.outputs.env_source_file }} ${{ inputs.integration_test_args }} --integration
+          "$TARGET" test --with-env-source "$ENV_SRC" $IT_ARGS --integration
 
   linux:
     name: Build Linux (Rocky Linux 8) Executables
@@ -482,22 +533,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup tmate session
         if: inputs.tmate_debugging == 'true'
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
         with:
           detached: true
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -510,18 +563,24 @@ jobs:
       - name: Build executable (file) within Docker
         id: linux_onefile
         if: inputs.build_onefile == 'true'
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest # most of the options are just so we can debug (via tmate) when we have a custom pytest --basetemp directory
+          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            -u ${{ steps.user.outputs.user }}
+            -u $THE_USER
             --env HOME=/home
             --env XDG_DATA_HOME=/home/.local/share
             --env XDG_CACHE_HOME=/home/.cache
-            --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-            --env UNIT_TESTS=${{ inputs.unit_tests }}
-            --env INTEGRATION_TESTS=${{ inputs.integration_tests }}
+            --env GH_TOKEN
+            --env UNIT_TESTS
+            --env INTEGRATION_TESTS
+            --env PYINST_DIR
+            --env EXE_NAME
+            --env VER
+            --env LOG_LEVEL
+            --env UT_ARGS
+            --env IT_ARGS
           run: |
             set -e # exit on first failure
 
@@ -532,42 +591,58 @@ jobs:
 
             # Configure the app's Python environment
             # this allows us to run integration tests that use `script_data_in/out: "direct"`
-            poetry run ${{ inputs.executable_name }} env setup python --use-current
-            ENV_SOURCE_FILE=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
+            poetry run "$EXE_NAME" env setup python --use-current
+            ENV_SOURCE_FILE=$(poetry run "$EXE_NAME" env info source_file -l python)
             echo "ENV_SOURCE_FILE=${ENV_SOURCE_FILE}"
 
             # build with pyinstaller for Rocky Linux (file)
-            cd ${{ inputs.pyinstaller_dir }}
-            ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux ${{ inputs.logLevel }} onefile
+            cd "$PYINST_DIR"
+            ./make.sh "${EXE_NAME}-${VER}-linux" "$LOG_LEVEL" onefile
             cd ..
 
             # install cache data
-            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-            poetry run ${{ inputs.executable_name }} data --list
-            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-            poetry run ${{ inputs.executable_name }} program --list
+            poetry run "$PYINST_DIR" data install-cache "${EXE_NAME}-app-data-cache/data"
+            poetry run "$PYINST_DIR" data --list
+            poetry run "$PYINST_DIR" program install-cache "${EXE_NAME}-app-data-cache/programs"
+            poetry run "$PYINST_DIR" program --list
 
             export PYTHONUNBUFFERED=ok
             if [ "$UNIT_TESTS" = "true" ]; then
               # run test suite on the frozen app (file)
-              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test --with-env-source ${ENV_SOURCE_FILE} ${{ inputs.unit_test_args }}
+              "$PYINST_DIR/dist/onefile/${EXE_NAME}-${VER}-linux" test --with-env-source ${ENV_SOURCE_FILE} $UT_ARGS
             fi
 
             if [ "$INTEGRATION_TESTS" == "true" ]; then
               # run integration test suite on the frozen app (file)
               # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
-              ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux test --with-env-source ${ENV_SOURCE_FILE} ${{ inputs.integration_test_args }} --integration
+              "$PYINST_DIR/dist/onefile/${EXE_NAME}-${VER}-linux" test --with-env-source ${ENV_SOURCE_FILE} $IT_ARGS --integration
             fi
+        env:
+          PYINST_DIR: ${{ inputs.pyinstaller_dir }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNIT_TESTS: ${{ inputs.unit_tests }}
+          INTEGRATION_TESTS: ${{ inputs.integration_tests }}
+          EXE_NAME: ${{ inputs.executable_name }}
+          VER: ${{ needs.status.outputs.version }}
+          LOG_LEVEL: ${{ inputs.logLevel }}
+          UT_ARGS: ${{ inputs.unit_test_args }}
+          IT_ARGS: ${{ inputs.integration_test_args }}
+          THE_USER: ${{ steps.user.outputs.user }}
 
       - name: Build executable (folder) within Docker
         id: linux_onedir
         if: inputs.build_onedir == 'true'
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            --env GH_TOKEN
+            --env EXE_NAME
+            --env LOG_LEVEL
+            --env PYINST_DIR
+            --env VER
+            --env UT_ARGS
           run: |
             set -e # exit on first failure
 
@@ -578,31 +653,38 @@ jobs:
 
             # Configure the app's Python environment
             # this allows us to run integration tests that use `script_data_in/out: "direct"`
-            poetry run ${{ inputs.executable_name }} env setup python --use-current
-            ENV_SOURCE_FILE=$(poetry run ${{ inputs.executable_name }} env info source_file -l python)
+            poetry run "$EXE_NAME" env setup python --use-current
+            ENV_SOURCE_FILE=$(poetry run "$EXE_NAME" env info source_file -l python)
             echo "ENV_SOURCE_FILE=${ENV_SOURCE_FILE}"
 
             # build with pyinstaller for Rocky Linux (folder)
-            cd ${{ inputs.pyinstaller_dir }}
-            ./make.sh ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir ${{ inputs.logLevel }} onedir
+            cd "$PYINST_DIR"
+            ./make.sh "${EXE_NAME}-${VER}-linux-dir" "$LOG_LEVEL" onedir
             cd ..
 
             # install cache data
-            poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-            poetry run ${{ inputs.executable_name }} data --list
-            poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-            poetry run ${{ inputs.executable_name }} program --list
+            poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+            poetry run "$EXE_NAME" data --list
+            poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+            poetry run "$EXE_NAME" program --list
 
             export PYTHONUNBUFFERED=ok
             if [ "$UNIT_TESTS" == "true" ]; then
               # run test suite on the frozen app (folder)
-              ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir test --with-env-source ${ENV_SOURCE_FILE} ${{ inputs.unit_test_args }}
+              "${PYINST_DIR}/dist/onedir/${EXE_NAME}-${VER}-linux-dir/${EXE_NAME}-${VER}-linux-dir" test --with-env-source ${ENV_SOURCE_FILE} $UT_ARGS
             fi
+        env:
+          PYINST_DIR: ${{ inputs.pyinstaller_dir }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXE_NAME: ${{ inputs.executable_name }}
+          LOG_LEVEL: ${{ inputs.logLevel }}
+          VER: ${{ needs.status.outputs.version }}
+          UT_ARGS: ${{ inputs.unit_test_args }}
 
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.linux_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
@@ -611,7 +693,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
@@ -619,7 +701,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
@@ -627,7 +709,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
@@ -641,7 +723,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete cache artifact
-        uses: geekyeggo/delete-artifact@v6
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         with:
           name: "*-app-data-cache"
           failOnError: false
