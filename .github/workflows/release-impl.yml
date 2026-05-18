@@ -513,21 +513,23 @@ jobs:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN --env BUILT_EXE_PATH_FILE --env EXE_NAME
+            --env GH_TOKEN --env BUILT_EXE_PATH_FILE --env EXE_NAME --env PYINST_DIR --env BUILT_EXE_BASE_NAME --env BUILT_EXE_PATH_DIR
+            --env EXPECTED
           run: |
+            vers_expected="$EXPECTED"
+
             # set up poetry
             cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev
-            vers_expected="${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
 
             # build with pyinstaller for Rocky Linux (file)
-            cd ${{ inputs.pyinstaller_dir }}
-            ./make.sh ${{ env.BUILT_EXE_BASE_NAME }}-linux INFO onefile
+            cd "$PYINST_DIR"
+            ./make.sh "${BUILT_EXE_BASE_NAME}-linux" INFO onefile
             cd ..
 
             # version check (file)
-            vers=$(${{ env.BUILT_EXE_PATH_FILE }} --version)
+            vers=$("$BUILT_EXE_PATH_FILE" --version)
             echo $vers
             echo $vers_expected
             [ "$vers" = "$vers_expected" ]
@@ -539,29 +541,31 @@ jobs:
             "$BUILT_EXE_PATH_FILE" program --list
 
             # run test suite on the frozen app (file)
-            ${{ env.BUILT_EXE_PATH_FILE }} test
+            "$BUILT_EXE_PATH_FILE" test
 
             # build with pyinstaller for Rocky Linux (folder)
-            cd ${{ inputs.pyinstaller_dir }}
-            ./make.sh ${{ env.BUILT_EXE_BASE_NAME }}-linux-dir INFO onedir
+            cd "$PYINST_DIR"
+            ./make.sh "${BUILT_EXE_BASE_NAME}-linux-dir" INFO onedir
             cd ..
 
             # version check (folder)
-            vers=$(${{ env.BUILT_EXE_PATH_DIR }} --version)
+            vers=$("$BUILT_EXE_PATH_DIR" --version)
             echo $vers
             echo $vers_expected
             [ "$vers" = "$vers_expected" ]
 
             # run test suite on the frozen app (folder)
-            ${{ env.BUILT_EXE_PATH_DIR }} test
+            "$BUILT_EXE_PATH_DIR" test
 
             # Compress folder (folder)
-            cd ${{ inputs.pyinstaller_dir }}
-            ./compress.sh ${{ env.BUILT_EXE_BASE_NAME }}-linux-dir 'onedir'
+            cd "$PYINST_DIR"
+            ./compress.sh "${BUILT_EXE_BASE_NAME}-linux-dir" 'onedir'
             cd ..
         env:
           GH_TOKEN: ${{ secrets.general-token }}
           EXE_NAME: ${{ inputs.executable_name }}
+          PYINST_DIR: ${{ inputs.pyinstaller_dir }}
+          EXPECTED: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
 
       - name: Upload executable artifact (file)
         uses: actions/upload-artifact@v7
