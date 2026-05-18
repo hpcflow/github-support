@@ -142,7 +142,7 @@ jobs:
       sha: ${{ steps.info.outputs.sha }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0 # get all history and tags
           persist-credentials: false
@@ -167,23 +167,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ needs.status.outputs.sha }}
           persist-credentials: false
 
       - name: Set up python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ inputs.python-version }}
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: test
           version: ${{ inputs.python-version }}
@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ~/.cache/${{ inputs.executable_name }}
@@ -233,34 +233,34 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Setup tmate session
         if: inputs.tmate_debugging == 'true'
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
         with:
           detached: true
 
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -297,7 +297,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.win_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
@@ -306,7 +306,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
@@ -314,7 +314,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
@@ -322,7 +322,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
@@ -385,34 +385,34 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Setup tmate session
         if: inputs.tmate_debugging == 'true'
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
         with:
           detached: true
 
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@0.5
+        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -449,7 +449,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.mac_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -458,7 +458,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
@@ -466,7 +466,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
@@ -474,7 +474,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -533,24 +533,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Setup tmate session
         if: inputs.tmate_debugging == 'true'
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
         with:
           detached: true
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@0.5
+        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
 
       - name: Download prepared cached app data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ${{ inputs.executable_name }}-app-data-cache
@@ -563,7 +563,7 @@ jobs:
       - name: Build executable (file) within Docker
         id: linux_onefile
         if: inputs.build_onefile == 'true'
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
@@ -632,7 +632,7 @@ jobs:
       - name: Build executable (folder) within Docker
         id: linux_onedir
         if: inputs.build_onedir == 'true'
-        uses: addnab/docker-run-action@v3
+        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         with:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
@@ -684,7 +684,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.linux_onefile.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
@@ -693,7 +693,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
@@ -701,7 +701,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
@@ -709,7 +709,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
@@ -723,7 +723,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete cache artifact
-        uses: geekyeggo/delete-artifact@v6
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         with:
           name: "*-app-data-cache"
           failOnError: false
