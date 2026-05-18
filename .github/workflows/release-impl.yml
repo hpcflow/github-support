@@ -260,22 +260,25 @@ jobs:
       - name: Rebase into develop branch if exists (stable release)
         if: inputs.pr-base-ref == inputs.release_branch
         run: |
-          exists_in_remote=$(git ls-remote --heads origin refs/heads/${{ inputs.pre_release_branch }})
+          exists_in_remote=$(git ls-remote --heads origin "refs/heads/$PRE_BRANCH")
           echo "exists_in_remote: $exists_in_remote"
           if [[ -n $exists_in_remote ]]; then
             export SKIP=end-of-file-fixer
-            git checkout ${{ inputs.pre_release_branch }}
+            git checkout "$PRE_BRANCH"
             git pull
-            git rebase ${{ inputs.release_branch }}
-            git push -u origin ${{ inputs.pre_release_branch }}
+            git rebase "$BASE_BRANCH"
+            git push -u origin "$PRE_BRANCH"
           else
-            echo "No ${{ inputs.pre_release_branch }} branch to merge into."
+            echo "No $PRE_BRANCH branch to merge into."
           fi
+        env:
+          PRE_BRANCH: ${{ inputs.pre_release_branch }}
+          BASE_BRANCH: ${{ inputs.release_branch }}
 
       - name: Generate incremental CHANGELOG for GitHub release body (stable release)
         if: inputs.pr-base-ref == inputs.release_branch
         run: |
-          ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md $cur_tag..
+          ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "$cur_tag..""
           cat CHANGELOG_increment.md
         env:
           cur_tag: ${{ steps.cur_tag.outputs.tag }}
@@ -284,7 +287,7 @@ jobs:
       - name: Generate incremental CHANGELOG for GitHub release body (pre-release)
         if: inputs.pr-base-ref == inputs.pre_release_branch
         run: |
-          ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md $new_tag
+          ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "$new_tag"
           cat CHANGELOG_increment.md
         env:
           new_tag: ${{ steps.new_tag.outputs.tag }}
@@ -332,7 +335,9 @@ jobs:
 
       - name: Cache all app data and programs
         run: |
-          poetry run ${{ inputs.executable_name }} manage cache-all
+          poetry run "$EXE_NAME" manage cache-all
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
@@ -395,11 +400,12 @@ jobs:
       - name: Install cached app data
         env:
           PYTHONUTF8: 1
+          EXE_NAME: ${{ inputs.executable_name }}
         run: |
-          poetry run ${{ inputs.executable_name }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-          poetry run ${{ inputs.executable_name }} data --list
-          poetry run ${{ inputs.executable_name }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-          poetry run ${{ inputs.executable_name }} program --list
+          poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+          poetry run "$EXE_NAME" data --list
+          poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+          poetry run "$EXE_NAME" program --list
 
       - name: Build with pyinstaller (non-Windows, file)
         if: runner.os != 'Windows'
@@ -507,7 +513,7 @@ jobs:
           image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN=${{ secrets.general-token }}
+            --env GH_TOKEN --env BUILT_EXE_PATH_FILE --env EXE_NAME
           run: |
             # set up poetry
             cd /home
@@ -527,10 +533,10 @@ jobs:
             [ "$vers" = "$vers_expected" ]
 
             # install cache data
-            ${{ env.BUILT_EXE_PATH_FILE }} data install-cache ${{ inputs.executable_name }}-app-data-cache/data
-            ${{ env.BUILT_EXE_PATH_FILE }} data --list
-            ${{ env.BUILT_EXE_PATH_FILE }} program install-cache ${{ inputs.executable_name }}-app-data-cache/programs
-            ${{ env.BUILT_EXE_PATH_FILE }} program --list
+            "$BUILT_EXE_PATH_FILE" data install-cache "${EXE_NAME}-app-data-cache/data"
+            "$BUILT_EXE_PATH_FILE" data --list
+            "$BUILT_EXE_PATH_FILE" program install-cache "${EXE_NAME}-app-data-cache/programs"
+            "$BUILT_EXE_PATH_FILE" program --list
 
             # run test suite on the frozen app (file)
             ${{ env.BUILT_EXE_PATH_FILE }} test
@@ -553,6 +559,9 @@ jobs:
             cd ${{ inputs.pyinstaller_dir }}
             ./compress.sh ${{ env.BUILT_EXE_BASE_NAME }}-linux-dir 'onedir'
             cd ..
+        env:
+          GH_TOKEN: ${{ secrets.general-token }}
+          EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Upload executable artifact (file)
         uses: actions/upload-artifact@v7
@@ -610,7 +619,12 @@ jobs:
 
       - name: Run app make workflow command
         run: |
-          poetry run ${{ inputs.executable_name }} --timeit-file benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt make ${{ inputs.benchmark_make_workflow }} --var N ${{ matrix.num_elements }}
+          poetry run "$EXE_NAME" --timeit-file "benchmark_make_workflow_${N_ELEM}_elements-${RUNNER_OS}-py-${PY_VER}.txt" make "$BENCHMARK" --var N "$N_ELEM"
+        env:
+          BENCHMARK: ${{ inputs.benchmark_make_workflow }}
+          EXE_NAME: ${{ inputs.executable_name }}
+          PY_VER: ${{ matrix.python-version }}
+          N_ELEM: ${{ matrix.num_elements }}
 
       - name: Store benchmark data
         uses: actions/upload-artifact@v7
@@ -731,27 +745,33 @@ jobs:
       - name: Release info
         id: get_binary_download_links
         run: |
-          binaryYaml=$(python3 -c "
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          python3 -c "
+          import os
           out_yaml = ''
-          exe_base = '${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-'
-          url_base = 'https://github.com/${{ inputs.repository }}/releases/download/${{ needs.bump-version.outputs.new_tag }}/'
+          exe_base = os.environ['EXE_BASE']
+          url_base = os.environ['URL_BASE']
+          eof = os.environ['EOF']
           for i in ['win.exe', 'macOS', 'linux', 'win-dir.zip', 'macOS-dir.zip', 'linux-dir.zip']:
             exe_name = f'{exe_base}{i}'
             out_yaml += f'{exe_name}: {url_base}{exe_name}\n'
-          print(out_yaml)
-          ")
           # Save multiline output
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "binary_download_links<<$EOF" >> $GITHUB_OUTPUT
-          echo "$binaryYaml" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            f.write(f'binary_download_links<<{eof}\n{out_yaml}{eof}\n')
+          "
+        env:
+          EXE_BASE: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-
+          URL_BASE: https://github.com/${{ inputs.repository }}/releases/download/${{ needs.bump-version.outputs.new_tag }}/
 
       - name: Publish (to ${{ inputs.pypi-url }})
         id: publish
         run: |
-          poetry config repositories.pypi ${{ inputs.pypi-url }}
-          poetry config pypi-token.pypi ${{ secrets.pypi-token }}
+          poetry config repositories.pypi "$URL"
+          poetry config pypi-token.pypi "$TOKEN"
           poetry publish --repository pypi
+        env:
+          URL: ${{ inputs.pypi-url }}
+          TOKEN: ${{ secrets.pypi-token }}
 
   build-documentation:
     needs: release-github-PyPI
@@ -775,25 +795,30 @@ jobs:
 
       - name: Write binary links YAML file and push
         run: |
-          echo -e "${{ needs.release-github-PyPI.outputs.binary_download_links }}" > docs/source/released_binaries.yml
+          echo -e "$BIN_LINKS" > docs/source/released_binaries.yml
           git add .
           git commit -m "build: update binary download links file [skip ci]"
           git push
+        env:
+          BIN_LINKS: ${{ needs.release-github-PyPI.outputs.binary_download_links }}
 
       - name: Rebase into develop branch if exists (stable release)
         if: inputs.pr-base-ref == inputs.release_branch
         run: |
-          exists_in_remote=$(git ls-remote --heads origin refs/heads/${{ inputs.pre_release_branch }})
+          exists_in_remote=$(git ls-remote --heads origin "refs/heads/$PRE_BRANCH")
           echo "exists_in_remote: $exists_in_remote"
           if [[ -n $exists_in_remote ]]; then
             export SKIP=end-of-file-fixer
-            git checkout ${{ inputs.pre_release_branch }}
+            git checkout "$PRE_BRANCH"
             git pull
-            git rebase ${{ inputs.release_branch }}
-            git push -u origin ${{ inputs.pre_release_branch }}
+            git rebase "$BASE_BRANCH"
+            git push -u origin "$PRE_BRANCH"
           else
-            echo "No ${{ inputs.pre_release_branch }} branch to merge into."
+            echo "No $PRE_BRANCH branch to merge into."
           fi
+        env:
+          PRE_BRANCH: ${{ inputs.pre_release_branch }}
+          BASE_BRANCH: ${{ inputs.release_branch }}
 
       - name: Cache dependencies
         uses: hpcflow/github-support/init-cache@0.5
@@ -850,21 +875,26 @@ jobs:
       - name: Update stable docs symlink
         if: inputs.pr-base-ref == inputs.release_branch
         run: |
-          ln -sfn ${{ needs.bump-version.outputs.new_tag }} docs/stable
+          ln -sfn "$TAG" docs/stable
+        env:
+          TAG: ${{ needs.bump-version.outputs.new_tag }}
 
       - name: Update pre-release docs symlink
         if: inputs.pr-base-ref == inputs.pre_release_branch
         run: |
-          ln -sfn ${{ needs.bump-version.outputs.new_tag }} docs/dev
+          ln -sfn "$TAG" docs/dev
+        env:
+          TAG: ${{ needs.bump-version.outputs.new_tag }}
 
       - run: tree
 
       - name: Update doc version switcher
         run: |
-          curl $URL --output docs/make_vers_switcher.py
-          python docs/make_vers_switcher.py ${{ inputs.docs_url_prefix }}
+          curl "$URL" --output docs/make_vers_switcher.py
+          python docs/make_vers_switcher.py "$DOC_PREFIX"
         env:
           URL: https://raw.githubusercontent.com/${{ inputs.repository }}/${{ github.ref_name }}/docs/make_vers_switcher.py
+          DOC_PREFIX: ${{ inputs.docs_url_prefix }}
 
       - name: Push changes
         id: publish

@@ -290,8 +290,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONUNBUFFERED: ok
           EXE_NAME: ${{ inputs.executable_name }}
+          PYTEST_ARGS: ${{ inputs.pytest_args }}
+          UT_ARGS: ${{ inputs.unit_test_args }}
         run: |
-          poetry run "$EXE_NAME" test ${{ inputs.pytest_args }} ${{ inputs.unit_test_args }}
+          poetry run "$EXE_NAME" test $PYTEST_ARGS $UT_ARGS
 
   test-units-RockyLinux:
     needs: [pre-commit, cache-app-data]

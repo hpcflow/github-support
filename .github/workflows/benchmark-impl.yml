@@ -83,12 +83,15 @@ jobs:
       - name: Set up variables
         id: vars
         run: |
-          echo "timeit=benchmark_make_workflow_${{ matrix.num_elements }}_elements-${{ runner.os }}-py-${{ matrix.python-version }}.txt" >> $GITHUB_OUTPUT
+          echo "timeit=benchmark_make_workflow_${N_ELEMS}_elements-${RUNNER_OS}-py-${PY_VER}.txt" >> $GITHUB_OUTPUT
         shell: bash
+        env:
+          N_ELEMS: ${{ matrix.num_elements }}
+          PY_VER: ${{ matrix.python-version }}
 
       - name: Run app make workflow command
         run: |
-          poetry run $EXECUTABLE --timeit-file $TIMEIT_FILE make $BENCHMARK --var N $N_ELEMS
+          poetry run "$EXECUTABLE" --timeit-file "$TIMEIT_FILE" make $BENCHMARK --var N "$N_ELEMS"
         env:
           EXECUTABLE: ${{ inputs.executable_name }}
           BENCHMARK: ${{ inputs.benchmark_make_workflow }}
