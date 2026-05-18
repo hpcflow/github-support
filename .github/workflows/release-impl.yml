@@ -215,19 +215,21 @@ jobs:
       - name: Commitizen bump # First update version number to latest stable release, then bump to new stable release, add a new tag and commit
         if: inputs.pr-base-ref == inputs.release_branch
         run: |
-          python3 -c "
+          python3 -c '
           from commitizen.bump import update_version_in_files
+          import os
           update_version_in_files(
-              current_version='$pre_tag'.lstrip('v'),
-              new_version='$cur_tag'.lstrip('v'),
-              version_files=['pyproject.toml', '${{ inputs.version_file }}'],
+              current_version=os.environ["pre_tag"].lstrip("v"),
+              new_version=os.environ["cur_tag"].lstrip("v"),
+              version_files=["pyproject.toml", os.environ["ver_file"]],
               check_consistency=False,
-              encoding='utf-8',
-          )"
+              encoding="utf-8",
+          )'
           cz bump
         env:
           pre_tag: ${{ steps.pre_tag.outputs.tag }}
           cur_tag: ${{ steps.cur_tag.outputs.tag }}
+          ver_file: ${{ inputs.version_file }}
 
       - name: Get new tag
         id: new_tag
@@ -458,7 +460,9 @@ jobs:
       - name: Compress folder (windows, folder)
         if: runner.os == 'Windows'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./compress.ps1 -ExeName '${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir' -BuildType 'onedir'
+        run: ./compress.ps1 -ExeName "$env:TARGET" -BuildType 'onedir'
+        env:
+          TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir
 
       - name: Compress folder (non-windows, folder)
         if: runner.os != 'Windows'
@@ -748,21 +752,20 @@ jobs:
 
       - name: Release info
         id: get_binary_download_links
+        shell: python
         run: |
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          python3 -c "
           import os
-          out_yaml = ''
+          import string
+          import random
           exe_base = os.environ['EXE_BASE']
           url_base = os.environ['URL_BASE']
+          eof = ''.join(random.choices(string.ascii_uppercase + string.digits, k=24))
           eof = os.environ['EOF']
-          for i in ['win.exe', 'macOS', 'linux', 'win-dir.zip', 'macOS-dir.zip', 'linux-dir.zip']:
-            exe_name = f'{exe_base}{i}'
-            out_yaml += f'{exe_name}: {url_base}{exe_name}\n'
-          # Save multiline output
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-            f.write(f'binary_download_links<<{eof}\n{out_yaml}{eof}\n')
-          "
+            f.write(f'binary_download_links<<{eof}\n')
+            for suffix in ['win.exe', 'macOS', 'linux', 'win-dir.zip', 'macOS-dir.zip', 'linux-dir.zip']:
+              f.write(f'{exe_base}{suffix}: {url_base}{exe_base}{suffix}\n')
+            f.write(f'{eof}\n')
         env:
           EXE_BASE: ${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-
           URL_BASE: https://github.com/${{ inputs.repository }}/releases/download/${{ needs.bump-version.outputs.new_tag }}/

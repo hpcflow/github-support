@@ -280,13 +280,19 @@ jobs:
         id: win_onefile
         if: inputs.build_onefile == 'true'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./make.ps1 -ExeName "${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win" -LogLevel ${{ inputs.logLevel }} -BuildType 'onefile'
+        run: ./make.ps1 -ExeName "$env:EXE_NAME" -LogLevel "env:LOG_LEVEL" -BuildType 'onefile'
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
+          LOG_LEVEL: ${{ inputs.logLevel }}
 
       - name: Build with pyinstaller for Windows (folder)
         id: win_onedir
         if: inputs.build_onedir == 'true'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./make.ps1 -ExeName "${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir" -LogLevel ${{ inputs.logLevel }} -BuildType 'onedir'
+        run: ./make.ps1 -ExeName "$env:EXE_NAME" -LogLevel "$env:LOG_LEVEL" -BuildType 'onedir'
+        env:
+          EXE_NAME: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
+          LOG_LEVEL: ${{ inputs.logLevel }}
 
       - name: Upload executable artifact (file)
         id: upload-file
@@ -342,7 +348,7 @@ jobs:
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.unit_test_args }}
         run: |
-          $env:EXE_FILE test --with-env-source $env:ENV_SRC $env:ARGS
+          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
 
       - name: Run test suite on the frozen app (folder)
         if: steps.win_onedir.outcome == 'success' && inputs.unit_tests == 'true'
@@ -354,7 +360,7 @@ jobs:
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.unit_test_args }}
         run: |
-          $env:EXE_FILE test --with-env-source $env:ENV_SRC $env:ARGS
+          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.win_onefile.outcome == 'success' && inputs.integration_tests == 'true'
@@ -366,7 +372,7 @@ jobs:
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.integration_test_args }}
         run: |
-          $env:EXE_FILE test --with-env-source $env:ENV_SRC $env:ARGS --integration
+          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS --integration
 
   macos:
     name: Build macOS Executables
@@ -559,7 +565,7 @@ jobs:
         if: inputs.build_onefile == 'true'
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest # most of the options are just so we can debug (via tmate) when we have a custom pytest --basetemp directory
+          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
             -u $THE_USER
