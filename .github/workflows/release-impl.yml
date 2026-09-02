@@ -411,6 +411,7 @@ jobs:
           poetry run "$EXE_NAME" data --list
           poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
           poetry run "$EXE_NAME" program --list
+        shell: bash
 
       - name: Build with pyinstaller (non-Windows, file)
         if: runner.os != 'Windows'
@@ -642,6 +643,7 @@ jobs:
           EXE_NAME: ${{ inputs.executable_name }}
           PY_VER: ${{ matrix.python-version }}
           N_ELEM: ${{ matrix.num_elements }}
+        shell: bash
 
       - name: Store benchmark data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

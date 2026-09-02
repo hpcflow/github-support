@@ -70,6 +70,7 @@ jobs:
           poetry install --without dev,pyinstaller
 
       - name: Run tests
+        shell: bash
         run: |
           poetry run python -m pytest $ARGUMENTS
         env:

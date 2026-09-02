@@ -275,6 +275,7 @@ jobs:
           poetry install --without dev,pyinstaller
 
       - name: Install cached app data
+        shell: bash
         env:
           PYTHONUTF8: 1
           EXE_NAME: ${{ inputs.executable_name }}
@@ -285,6 +286,7 @@ jobs:
           poetry run "$EXE_NAME" program --list
 
       - name: Run tests
+        shell: bash
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -392,6 +394,7 @@ jobs:
           poetry install --without dev,pyinstaller
 
       - name: Install cached app data
+        shell: bash
         env:
           PYTHONUTF8: 1
           EXE_NAME: ${{ inputs.executable_name }}
@@ -402,6 +405,7 @@ jobs:
           poetry run "$EXE_NAME" program --list
 
       - name: Run integration tests
+        shell: bash
         timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
