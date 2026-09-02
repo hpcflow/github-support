@@ -776,7 +776,7 @@ jobs:
         uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
-          command: python "./$Env:CLI_PATH" internal get-invoc-cmd
+          command: python ./$Env:CLI_PATH internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
         env:
           POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
@@ -786,7 +786,7 @@ jobs:
         uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
-          command: python -m "$Env:CLI_MODULE" internal get-invoc-cmd
+          command: python -m $Env:CLI_MODULE internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
         env:
           POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
@@ -807,7 +807,7 @@ jobs:
         uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
-          command: python github-support\scripts\get_invoc_cmd.py "$Env:APP_PKG"
+          command: python github-support\scripts\get_invoc_cmd.py $Env:APP_PKG
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.cli-path }}')"
         env:
           POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
