@@ -146,7 +146,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.pre-commit-token }}
           # checkout PR source branch (head_ref) if event is pull_request:
@@ -184,7 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
 
@@ -239,7 +239,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
       - name: Set up python ${{ matrix.python-version }}
@@ -295,7 +295,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
       - name: Cache dependencies
@@ -346,7 +346,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
       - name: Set up python ${{ matrix.python-version }}
@@ -401,7 +401,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
       - name: Cache dependencies
@@ -447,11 +447,11 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
       - name: Checkout supporting test infrastructure
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: hpcflow/github-support
           path: github-support
@@ -552,11 +552,11 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
       - name: Checkout supporting test infrastructure
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: hpcflow/github-support
           path: github-support
@@ -657,11 +657,11 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
       - name: Checkout supporting test infrastructure
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: hpcflow/github-support
           path: github-support
