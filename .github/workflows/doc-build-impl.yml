@@ -90,12 +90,7 @@ jobs:
           ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Checkout support code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: hpcflow/github-support
-          path: github-support
-          ref: ${{ inputs.script-branch }}
-          persist-credentials: false
+        uses: $/checkout-self
       - name: Init Python ${{ inputs.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
