@@ -321,12 +321,13 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Run unit tests within Docker
-        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
+        uses: $/run-in-docker
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN --env EXE_NAME --env UT_ARGS
+            --env GH_TOKEN
+            --env EXE_NAME
+            --env UT_ARGS
           run: |
             cd /home
             poetry config virtualenvs.in-project true
@@ -437,12 +438,13 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Run integration tests within Docker
-        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
+        uses: $/run-in-docker
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN --env EXE_NAME --env IT_ARGS
+            --env GH_TOKEN
+            --env EXE_NAME
+            --env IT_ARGS
           run: |
             cd /home
             poetry config virtualenvs.in-project true

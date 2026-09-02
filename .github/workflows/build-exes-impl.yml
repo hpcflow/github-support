@@ -563,9 +563,8 @@ jobs:
       - name: Build executable (file) within Docker
         id: linux_onefile
         if: inputs.build_onefile == 'true'
-        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
+        uses: $/run-in-docker
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
             -u $THE_USER
@@ -632,9 +631,8 @@ jobs:
       - name: Build executable (folder) within Docker
         id: linux_onedir
         if: inputs.build_onedir == 'true'
-        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
+        uses: $/run-in-docker
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
             --env GH_TOKEN

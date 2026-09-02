@@ -516,12 +516,16 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Build executables within Docker
-        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
+        uses: $/run-in-docker
         with:
-          image: ghcr.io/hpcflow/rockylinux8-python:latest
           options: |
             -v ${{ github.workspace }}:/home
-            --env GH_TOKEN --env BUILT_EXE_PATH_FILE --env EXE_NAME --env PYINST_DIR --env BUILT_EXE_BASE_NAME --env BUILT_EXE_PATH_DIR
+            --env GH_TOKEN
+            --env BUILT_EXE_PATH_FILE
+            --env EXE_NAME
+            --env PYINST_DIR
+            --env BUILT_EXE_BASE_NAME
+            --env BUILT_EXE_PATH_DIR
             --env EXPECTED
           run: |
             vers_expected="$EXPECTED"
