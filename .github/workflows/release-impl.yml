@@ -442,6 +442,7 @@ jobs:
           TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir
 
       - name: Version check (file)
+        if: runner.os != 'Windows'
         uses: $/compare
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
@@ -449,11 +450,28 @@ jobs:
             "$BUILT_EXE_PATH_FILE" --version
 
       - name: Version check (folder)
+        if: runner.os != 'Windows'
         uses: $/compare
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
           command: |
             "$BUILT_EXE_PATH_DIR" --version
+
+      - name: Version check (file)
+        if: runner.os == 'Windows'
+        uses: $/compare
+        with:
+          expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
+          command: |
+            "$Env:BUILT_EXE_PATH_FILE" --version
+
+      - name: Version check (folder)
+        if: runner.os == 'Windows'
+        uses: $/compare
+        with:
+          expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
+          command: |
+            "$Env:BUILT_EXE_PATH_DIR" --version
 
       - name: Run test suite on the frozen app (folder)
         env:
