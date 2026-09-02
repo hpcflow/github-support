@@ -796,8 +796,7 @@ jobs:
         uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
-          command: |
-            "$Env:EXE_NAME" internal get-invoc-cmd
+          command: $Env:EXE_NAME internal get-invoc-cmd
           expected: "('${{ steps.prep-test-data.outputs.python-path }}', '${{ steps.prep-test-data.outputs.exe-path }}')"
         env:
           POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
@@ -816,7 +815,7 @@ jobs:
       - name: Test direct workflow submission within a python script
         run: |
           ."$Env:POETRY_PATH\Scripts\activate.ps1"
-          python github-support\scripts\test_direct_sub_python_script.py "$Env:APP_PKG"
+          python github-support\scripts\test_direct_sub_python_script.py $Env:APP_PKG
         env:
           POETRY_PATH: ${{ steps.poetry.outputs.poetry-path }}
           APP_PKG: ${{ inputs.app_package }}
