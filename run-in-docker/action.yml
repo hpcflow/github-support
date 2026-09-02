@@ -10,9 +10,9 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Run script within Docker
-      uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
-      with:
-        image: ghcr.io/hpcflow/rockylinux8-python:latest
-        options: ${{ inputs.options }}
-        run: ${{ inputs.run }}
+    - shell: bash
+      run: |
+        exec docker run $DockerOptions --entrypoint sh ghcr.io/hpcflow/rockylinux8-python:latest -c "$DockerRun"
+      env:
+        DockerOptions: ${{ inputs.options }}
+        DockerRun: ${{ inputs.run }}
