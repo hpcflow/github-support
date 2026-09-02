@@ -180,7 +180,7 @@ jobs:
       - name: Configure git
         uses: hpcflow/github-support/configure-git@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -318,7 +318,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -379,7 +379,7 @@ jobs:
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -613,7 +613,7 @@ jobs:
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
@@ -711,7 +711,7 @@ jobs:
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
@@ -804,7 +804,7 @@ jobs:
         uses: hpcflow/github-support/configure-git@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
 
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -867,7 +867,7 @@ jobs:
       publish-state: ${{ steps.publish.outcome }}
     steps:
       - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ inputs.python-version }}
 
