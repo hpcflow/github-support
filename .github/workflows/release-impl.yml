@@ -170,11 +170,12 @@ jobs:
       changelog: ${{ steps.upload-changelog.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }}
           token: ${{ secrets.commit-token }}
+          allow-unsafe-pr-checkout: true
       - name: Configure git
         uses: hpcflow/github-support/configure-git@0.5
       - name: Set up python ${{ inputs.python-version }}
@@ -304,9 +305,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.pr-base-ref }}
+          allow-unsafe-pr-checkout: true
+          persist-credentials: false
 
       - name: Set up python
         uses: actions/setup-python@v7
@@ -362,9 +365,11 @@ jobs:
       BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-${{ matrix.executable_os }}${{ matrix.executable_ext }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
+          allow-unsafe-pr-checkout: true
+          persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@v7
         with:
@@ -480,9 +485,11 @@ jobs:
       BUILT_EXE_PATH_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.bump-version.outputs.new_tag }}-linux
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
+          allow-unsafe-pr-checkout: true
+          persist-credentials: false
       - name: Cache dependencies
         uses: hpcflow/github-support/init-cache@0.5
         with:
@@ -580,9 +587,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
+          allow-unsafe-pr-checkout: true
+          persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@v7
         with:
@@ -633,9 +642,11 @@ jobs:
       benchmark-url: ${{ steps.upload.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
+          allow-unsafe-pr-checkout: true
+          persist-credentials: false
       - name: Make benchmark directory
         run: |
           mkdir benchmarks
@@ -669,9 +680,11 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
+          allow-unsafe-pr-checkout: true
+          persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@v7
         with:
@@ -749,11 +762,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
           token: ${{ secrets.commit-token }}
+          allow-unsafe-pr-checkout: true
 
       - name: Configure git
         uses: hpcflow/github-support/configure-git@0.5
@@ -822,10 +836,11 @@ jobs:
           python-version: ${{ inputs.python-version }}
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.website_source_org }}/${{ inputs.website_source_repo }}
           token: ${{ secrets.website-token }}
+          allow-unsafe-pr-checkout: true
 
       - name: Configure git
         uses: hpcflow/github-support/configure-git@0.5

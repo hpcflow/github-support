@@ -85,15 +85,17 @@ jobs:
       artifact-url: ${{ steps.upload.outputs.artifact-url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
+          persist-credentials: false
       - name: Checkout support code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: hpcflow/github-support
           path: github-support
           ref: ${{ inputs.script-branch }}
+          persist-credentials: false
       - name: Init Python ${{ inputs.python-version }}
         uses: actions/setup-python@v7
         with:
