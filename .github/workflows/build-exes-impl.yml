@@ -178,12 +178,12 @@ jobs:
           python-version: ${{ inputs.python-version }}
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test
           version: ${{ inputs.python-version }}
@@ -248,7 +248,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
@@ -260,7 +260,7 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -400,7 +400,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: build-exe
           version: ${{ inputs.python-version }}
@@ -412,7 +412,7 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -544,7 +544,7 @@ jobs:
           detached: true
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: build-exe
           version: ${{ inputs.python-version }}

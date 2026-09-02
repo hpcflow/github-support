@@ -101,11 +101,11 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Install and configure poetry ${{ inputs.poetry-version }}
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache Virtual Environment
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: sphinx
           version: ${{ inputs.python-version }}

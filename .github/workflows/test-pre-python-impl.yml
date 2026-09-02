@@ -56,12 +56,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test
           version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 

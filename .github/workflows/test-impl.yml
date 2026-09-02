@@ -154,7 +154,7 @@ jobs:
           repository: ${{ inputs.full-repo-name }}
           persist-credentials: true
       - name: Configure git for commits
-        uses: hpcflow/github-support/configure-git@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/configure-git
       - name: Set up python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -196,13 +196,13 @@ jobs:
           python-version: "3.13"
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test
           version: "3.13"
@@ -259,12 +259,12 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test
           version: ${{ matrix.python-version }}
@@ -309,7 +309,7 @@ jobs:
           ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test
           version: RockyLinux
@@ -370,12 +370,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test-integration
           version: ${{ matrix.python-version }}
@@ -426,7 +426,7 @@ jobs:
           ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test-integration
           version: RockyLinux
@@ -489,13 +489,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -516,7 +516,7 @@ jobs:
           PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python "./${CLI_PATH}" internal get-invoc-cmd
@@ -526,7 +526,7 @@ jobs:
           CLI_PATH: ${{ inputs.CLI_path }}
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python -m "$CLI_MODULE" internal get-invoc-cmd
@@ -536,7 +536,7 @@ jobs:
           CLI_MODULE: ${{ inputs.CLI_module }}
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: |
@@ -547,7 +547,7 @@ jobs:
           EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Test invocation command within a python script
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python github-support/scripts/get_invoc_cmd.py "$APP_PKG"
@@ -557,7 +557,7 @@ jobs:
           APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive python
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python github-support/scripts/get_invoc_cmd_interactive.py python "$APP_PKG"
@@ -567,7 +567,7 @@ jobs:
           APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive ipython
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python github-support/scripts/get_invoc_cmd_interactive.py ipython "$APP_PKG"
@@ -622,13 +622,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -649,7 +649,7 @@ jobs:
           PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python "./${CLI_PATH}" internal get-invoc-cmd
@@ -659,7 +659,7 @@ jobs:
           CLI_PATH: ${{ inputs.CLI_path }}
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python -m "$CLI_MODULE" internal get-invoc-cmd
@@ -669,7 +669,7 @@ jobs:
           CLI_MODULE: ${{ inputs.CLI_module }}
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: |
@@ -680,7 +680,7 @@ jobs:
           EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Test invocation command within a python script
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python github-support/scripts/get_invoc_cmd.py "$APP_PKG"
@@ -690,7 +690,7 @@ jobs:
           APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive python
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python github-support/scripts/get_invoc_cmd_interactive.py python "$APP_PKG"
@@ -700,7 +700,7 @@ jobs:
           APP_PKG: ${{ inputs.app_package }}
 
       - name: Test invocation command with interactive ipython
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: source "$POETRY_PATH/bin/activate"
           command: python github-support/scripts/get_invoc_cmd_interactive.py ipython "$APP_PKG"
@@ -755,13 +755,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         id: poetry
         timeout-minutes: ${{ inputs.install-poetry-timeout-minutes }}
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test-invocation
           version: ${{ matrix.python-version }}
@@ -784,7 +784,7 @@ jobs:
           PY: ${{ steps.poetry.outputs.python-path }}
 
       - name: Test invocation command with `python ./${{ inputs.CLI_path }}`
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
           command: python "./$Env:CLI_PATH" internal get-invoc-cmd
@@ -794,7 +794,7 @@ jobs:
           CLI_PATH: ${{ inputs.CLI_path }}
 
       - name: Test invocation command with `python -m ${{ inputs.CLI_module }}`
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
           command: python -m "$Env:CLI_MODULE" internal get-invoc-cmd
@@ -804,7 +804,7 @@ jobs:
           CLI_MODULE: ${{ inputs.CLI_module }}
 
       - name: Test invocation command with `${{ inputs.executable_name }}` entry point script
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
           command: |
@@ -815,7 +815,7 @@ jobs:
           EXE_NAME: ${{ inputs.executable_name }}
 
       - name: Test invocation command within a python script
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           init: ."$Env:POETRY_PATH\Scripts\activate.ps1"
           command: python github-support\scripts\get_invoc_cmd.py "$Env:APP_PKG"

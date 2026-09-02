@@ -178,7 +178,7 @@ jobs:
           persist-credentials: true
           allow-unsafe-pr-checkout: true
       - name: Configure git
-        uses: hpcflow/github-support/configure-git@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/configure-git
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -323,12 +323,12 @@ jobs:
           python-version: ${{ inputs.python-version }}
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: test
           version: ${{ inputs.python-version }}
@@ -383,7 +383,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: build
           version: ${{ inputs.python-version }}
@@ -395,7 +395,7 @@ jobs:
           path: ${{ inputs.executable_name }}-app-data-cache
 
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -441,14 +441,14 @@ jobs:
           TARGET: ${{ env.BUILT_EXE_BASE_NAME }}-${{ matrix.executable_os }}-dir
 
       - name: Version check (file)
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
           command: |
             "$BUILT_EXE_PATH_FILE" --version
 
       - name: Version check (folder)
-        uses: hpcflow/github-support/compare@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/compare
         with:
           expected: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
           command: |
@@ -504,7 +504,7 @@ jobs:
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: build
           version: ${{ inputs.python-version }}
@@ -621,11 +621,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: benchmark
           version: ${{ matrix.python-version }}
@@ -719,12 +719,12 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: release
           version: ${{ inputs.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -805,7 +805,7 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Configure git
-        uses: hpcflow/github-support/configure-git@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/configure-git
 
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -840,12 +840,12 @@ jobs:
           BASE_BRANCH: ${{ inputs.release_branch }}
 
       - name: Cache dependencies
-        uses: hpcflow/github-support/init-cache@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/init-cache
         with:
           name: release-doc
           version: ${{ inputs.python-version }}
       - name: Set up poetry
-        uses: hpcflow/github-support/setup-poetry@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
 
@@ -884,7 +884,7 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Configure git
-        uses: hpcflow/github-support/configure-git@86e0cf45f9f79069d0bc1b8a727c097a03d9012e # 0.5
+        uses: $/configure-git
 
       - name: Download documentation artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
