@@ -1,0 +1,18 @@
+name: Run code in Docker
+description: >
+  Runs code in the context of a Rocky Linux 8 image.
+inputs:
+  options:
+    description: Options to pass to docker
+  run:
+    description: The script to run in the container.
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        exec docker run $DockerOptions --entrypoint sh ghcr.io/hpcflow/rockylinux8-python:latest -c "$DockerRun"
+      env:
+        DockerOptions: ${{ inputs.options }}
+        DockerRun: ${{ inputs.run }}
