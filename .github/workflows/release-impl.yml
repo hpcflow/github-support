@@ -473,7 +473,15 @@ jobs:
           command: |
             "$Env:BUILT_EXE_PATH_DIR" --version
 
-      - name: Run test suite on the frozen app (folder)
+      - name: Run test suite on the frozen app (windows, folder)
+        if: runner.os == 'Windows'
+        env:
+          GH_TOKEN: ${{ secrets.general-token }}
+        run: |
+          & "$Env:BUILT_EXE_PATH_DIR" test
+
+      - name: Run test suite on the frozen app (non-windows, folder)
+        if: runner.os != 'Windows'
         env:
           GH_TOKEN: ${{ secrets.general-token }}
         run: |
