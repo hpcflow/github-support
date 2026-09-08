@@ -799,7 +799,6 @@ jobs:
           exe_base = os.environ['EXE_BASE']
           url_base = os.environ['URL_BASE']
           eof = ''.join(random.choices(string.ascii_uppercase + string.digits, k=24))
-          eof = os.environ['EOF']
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
             f.write(f'binary_download_links<<{eof}\n')
             for suffix in ['win.exe', 'macOS', 'linux', 'win-dir.zip', 'macOS-dir.zip', 'linux-dir.zip']:
