@@ -49,10 +49,17 @@ try:
 except Exception:
     run = wk.tasks[0].elements[0].iterations[0].action_runs[0]
     run_std_path = run.get_app_std_path()
+
     print(f"\n=== JS STDOUT ===")
     wk.submissions[0].jobscripts[0].print_stdout()
+
     print(f"\n=== JS STDERR ===")
     wk.submissions[0].jobscripts[0].print_stderr()
+
+    print(f"\n=== JOBSCRIPT ===")
+    with wk.submissions[0].jobscripts[0].jobscript_path.open("rt") as fp:
+        print(fp.read())
+
     print(f"\n=== RUN APP STD: {run_std_path} ===")
     if run_std_path.exists():
         print(run_std_path.read_text())
