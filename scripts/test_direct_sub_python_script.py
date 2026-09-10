@@ -44,4 +44,19 @@ tasks:
 """
 wk = app.Workflow.from_YAML_string(YAML_str=wk_yaml, path=gettempdir())
 wk.submit(wait=True)
-assert wk.tasks[0].elements[0].outputs.p2.value == "201"
+try:
+    assert wk.tasks[0].elements[0].outputs.p2.value == "201"
+except Exception:
+    run = wk.tasks[0].elements[0].iterations[0].action_runs[0]
+    run_std_path = run.get_app_std_path()
+    print(f"\n=== JS STDOUT ===")
+    wk.submissions[0].jobscripts[0].print_stdout()
+    print(f"\n=== JS STDERR ===")
+    wk.submissions[0].jobscripts[0].print_stderr()
+    print(f"\n=== RUN APP STD: {run_std_path} ===")
+    if run_std_path.exists():
+        print(run_std_path.read_text())
+    else:
+        print("APP STD FILE DOES NOT EXIST")
+
+    raise
