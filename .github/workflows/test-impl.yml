@@ -277,7 +277,7 @@ jobs:
       - name: Configure wait server hostname for MacOS  # see: https://github.com/actions/runner-images/issues/14568
         if: matrix.os == 'macos-latest'
         run: |
-          poetry run "$EXE_NAME" config set wait_server_hostname 127.0.0.1
+          poetry run "$EXE_NAME" config set server_advertise_host 127.0.0.1
         env:
           EXE_NAME: ${{ inputs.executable_name }}
 
@@ -403,7 +403,7 @@ jobs:
       - name: Configure wait server hostname for MacOS  # see: https://github.com/actions/runner-images/issues/14568
         if: matrix.os == 'macos-latest'
         run: |
-          poetry run "$EXE_NAME" config set wait_server_hostname 127.0.0.1
+          poetry run "$EXE_NAME" config set server_advertise_host 127.0.0.1
         env:
           EXE_NAME: ${{ inputs.executable_name }}
 
@@ -427,11 +427,11 @@ jobs:
           EXE_NAME: ${{ inputs.executable_name }}
           PYTEST_ARGS: ${{ inputs.pytest_args }}
           IT_ARGS: ${{ inputs.integration_test_args }}
-          WAIT_SERVER_HOSTNAME: ${{ matrix.os == 'macos-latest' && '127.0.0.1' || '' }}
+          SERVER_ADVERTISE_HOST: ${{ matrix.os == 'macos-latest' && '127.0.0.1' || '' }}
         run: |
           CONFIG_ARGS=()
-          if [[ -n "$WAIT_SERVER_HOSTNAME" ]]; then
-            CONFIG_ARGS+=(--with-config wait_server_hostname "$WAIT_SERVER_HOSTNAME")
+          if [[ -n "$SERVER_ADVERTISE_HOST" ]]; then
+            CONFIG_ARGS+=(--with-config server_advertise_host "$SERVER_ADVERTISE_HOST")
           fi
           poetry run "$EXE_NAME" "${CONFIG_ARGS[@]}" test $PYTEST_ARGS --integration $IT_ARGS
 
@@ -654,7 +654,7 @@ jobs:
 
       - name: Configure wait server hostname for MacOS  # see: https://github.com/actions/runner-images/issues/14568
         run: |
-          poetry run "$EXE_NAME" config set wait_server_hostname 127.0.0.1
+          poetry run "$EXE_NAME" config set server_advertise_host 127.0.0.1
         env:
           EXE_NAME: ${{ inputs.executable_name }}
 
