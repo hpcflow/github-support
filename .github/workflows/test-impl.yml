@@ -277,7 +277,7 @@ jobs:
       - name: Configure wait server hostname for MacOS  # see: https://github.com/actions/runner-images/issues/14568
         if: matrix.os == 'macos-latest'
         run: |
-          poetry run "$EXE_NAME" config set wait-server-hostname 127.0.0.1
+          poetry run "$EXE_NAME" config set wait_server_hostname 127.0.0.1
         env:
           EXE_NAME: ${{ inputs.executable_name }}
 
@@ -403,7 +403,7 @@ jobs:
       - name: Configure wait server hostname for MacOS  # see: https://github.com/actions/runner-images/issues/14568
         if: matrix.os == 'macos-latest'
         run: |
-          poetry run "$EXE_NAME" config set wait-server-hostname 127.0.0.1
+          poetry run "$EXE_NAME" config set wait_server_hostname 127.0.0.1
         env:
           EXE_NAME: ${{ inputs.executable_name }}
 
@@ -649,7 +649,7 @@ jobs:
 
       - name: Configure wait server hostname for MacOS  # see: https://github.com/actions/runner-images/issues/14568
         run: |
-          poetry run "$EXE_NAME" config set wait-server-hostname 127.0.0.1
+          poetry run "$EXE_NAME" config set wait_server_hostname 127.0.0.1
         env:
           EXE_NAME: ${{ inputs.executable_name }}
 
