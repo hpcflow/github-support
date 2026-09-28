@@ -433,7 +433,7 @@ jobs:
           if [[ -n "$WAIT_SERVER_HOSTNAME" ]]; then
             CONFIG_ARGS+=(--with-config wait_server_hostname "$WAIT_SERVER_HOSTNAME")
           fi
-          poetry run "$EXE_NAME" test "${CONFIG_ARGS[@]}" $PYTEST_ARGS --integration $IT_ARGS
+          poetry run "$EXE_NAME" "${CONFIG_ARGS[@]}" test $PYTEST_ARGS --integration $IT_ARGS
 
   test-integration-RockyLinux:
     needs: [pre-commit, cache-app-data]
