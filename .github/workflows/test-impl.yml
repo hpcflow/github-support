@@ -427,8 +427,13 @@ jobs:
           EXE_NAME: ${{ inputs.executable_name }}
           PYTEST_ARGS: ${{ inputs.pytest_args }}
           IT_ARGS: ${{ inputs.integration_test_args }}
+          WAIT_SERVER_HOSTNAME: ${{ matrix.os == 'macos-latest' && '127.0.0.1' || '' }}
         run: |
-          poetry run "$EXE_NAME" test $PYTEST_ARGS --integration $IT_ARGS
+          CONFIG_ARGS=()
+          if [[ -n "$WAIT_SERVER_HOSTNAME" ]]; then
+            CONFIG_ARGS+=(--with-config wait_server_hostname "$WAIT_SERVER_HOSTNAME")
+          fi
+          poetry run "$EXE_NAME" test "${CONFIG_ARGS[@]}" PYTEST_ARGS --integration $IT_ARGS
 
   test-integration-RockyLinux:
     needs: [pre-commit, cache-app-data]
