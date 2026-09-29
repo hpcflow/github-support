@@ -600,10 +600,10 @@ jobs:
             cd ..
 
             # install cache data
-            poetry run "$PYINST_DIR" data install-cache "${EXE_NAME}-app-data-cache/data"
-            poetry run "$PYINST_DIR" data --list
-            poetry run "$PYINST_DIR" program install-cache "${EXE_NAME}-app-data-cache/programs"
-            poetry run "$PYINST_DIR" program --list
+            poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+            poetry run "$EXE_NAME" data --list
+            poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+            poetry run "$EXE_NAME" program --list
 
             export PYTHONUNBUFFERED=ok
             if [ "$UNIT_TESTS" = "true" ]; then
