@@ -567,7 +567,7 @@ jobs:
         with:
           options: |
             -v ${{ github.workspace }}:/home
-            -u $THE_USER
+            -u ${{ steps.user.outputs.user }}
             --env HOME=/home
             --env XDG_DATA_HOME=/home/.local/share
             --env XDG_CACHE_HOME=/home/.cache
