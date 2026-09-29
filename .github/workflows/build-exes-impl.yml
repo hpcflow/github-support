@@ -335,7 +335,7 @@ jobs:
         run: |
           poetry run $env:EXE_NAME data install-cache "$($env:EXE_NAME)-app-data-cache/data"
           poetry run $env:EXE_NAME data --list
-          poetry run $env:EXE_NAME program install-cache "$(env:EXE_NAME)-app-data-cache/programs"
+          poetry run $env:EXE_NAME program install-cache "$($env:EXE_NAME)-app-data-cache/programs"
           poetry run $env:EXE_NAME program --list
 
       - name: Run test suite on the frozen app (file)
@@ -348,7 +348,11 @@ jobs:
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.unit_test_args }}
         run: |
-          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
+          $testArgs = @("test", "--with-env-source", "$env:ENV_SRC")
+          if (-not [string]::IsNullOrWhiteSpace($env:ARGS)) {
+            $testArgs += $env:ARGS
+          }
+          & "$env:EXE_FILE" @testArgs
 
       - name: Run test suite on the frozen app (folder)
         if: steps.win_onedir.outcome == 'success' && inputs.unit_tests == 'true'
@@ -360,7 +364,11 @@ jobs:
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.unit_test_args }}
         run: |
-          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
+          $testArgs = @("test", "--with-env-source", "$env:ENV_SRC")
+          if (-not [string]::IsNullOrWhiteSpace($env:ARGS)) {
+            $testArgs += $env:ARGS
+          }
+          & "$env:EXE_FILE" @testArgs
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.win_onefile.outcome == 'success' && inputs.integration_tests == 'true'
@@ -371,8 +379,12 @@ jobs:
           EXE_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.integration_test_args }}
-        run: |
-          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS --integration
+        run: |          
+          $testArgs = @("test", "--with-env-source", "$env:ENV_SRC", "--integration")
+          if (-not [string]::IsNullOrWhiteSpace($env:ARGS)) {
+            $testArgs += $env:ARGS
+          }
+          & "$env:EXE_FILE" @testArgs
 
   macos:
     name: Build macOS Executables
@@ -567,7 +579,7 @@ jobs:
         with:
           options: |
             -v ${{ github.workspace }}:/home
-            -u $THE_USER
+            -u ${{ steps.user.outputs.user }}
             --env HOME=/home
             --env XDG_DATA_HOME=/home/.local/share
             --env XDG_CACHE_HOME=/home/.cache
@@ -600,10 +612,10 @@ jobs:
             cd ..
 
             # install cache data
-            poetry run "$PYINST_DIR" data install-cache "${EXE_NAME}-app-data-cache/data"
-            poetry run "$PYINST_DIR" data --list
-            poetry run "$PYINST_DIR" program install-cache "${EXE_NAME}-app-data-cache/programs"
-            poetry run "$PYINST_DIR" program --list
+            poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
+            poetry run "$EXE_NAME" data --list
+            poetry run "$EXE_NAME" program install-cache "${EXE_NAME}-app-data-cache/programs"
+            poetry run "$EXE_NAME" program --list
 
             export PYTHONUNBUFFERED=ok
             if [ "$UNIT_TESTS" = "true" ]; then
@@ -636,6 +648,7 @@ jobs:
           options: |
             -v ${{ github.workspace }}:/home
             --env GH_TOKEN
+            --env UNIT_TESTS
             --env EXE_NAME
             --env LOG_LEVEL
             --env PYINST_DIR
@@ -674,6 +687,7 @@ jobs:
         env:
           PYINST_DIR: ${{ inputs.pyinstaller_dir }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNIT_TESTS: ${{ inputs.unit_tests }}
           EXE_NAME: ${{ inputs.executable_name }}
           LOG_LEVEL: ${{ inputs.logLevel }}
           VER: ${{ needs.status.outputs.version }}
