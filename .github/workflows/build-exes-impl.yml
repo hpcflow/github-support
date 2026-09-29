@@ -335,7 +335,7 @@ jobs:
         run: |
           poetry run $env:EXE_NAME data install-cache "$($env:EXE_NAME)-app-data-cache/data"
           poetry run $env:EXE_NAME data --list
-          poetry run $env:EXE_NAME program install-cache "$(env:EXE_NAME)-app-data-cache/programs"
+          poetry run $env:EXE_NAME program install-cache "$($env:EXE_NAME)-app-data-cache/programs"
           poetry run $env:EXE_NAME program --list
 
       - name: Run test suite on the frozen app (file)
