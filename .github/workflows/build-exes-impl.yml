@@ -280,7 +280,7 @@ jobs:
         id: win_onefile
         if: inputs.build_onefile == 'true'
         working-directory: ${{ inputs.pyinstaller_dir }}
-        run: ./make.ps1 -ExeName "$env:EXE_NAME" -LogLevel "env:LOG_LEVEL" -BuildType 'onefile'
+        run: ./make.ps1 -ExeName "$env:EXE_NAME" -LogLevel "$env:LOG_LEVEL" -BuildType 'onefile'
         env:
           EXE_NAME: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
           LOG_LEVEL: ${{ inputs.logLevel }}
