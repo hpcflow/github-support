@@ -636,6 +636,7 @@ jobs:
           options: |
             -v ${{ github.workspace }}:/home
             --env GH_TOKEN
+            --env UNIT_TESTS
             --env EXE_NAME
             --env LOG_LEVEL
             --env PYINST_DIR
@@ -674,6 +675,7 @@ jobs:
         env:
           PYINST_DIR: ${{ inputs.pyinstaller_dir }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNIT_TESTS: ${{ inputs.unit_tests }}
           EXE_NAME: ${{ inputs.executable_name }}
           LOG_LEVEL: ${{ inputs.logLevel }}
           VER: ${{ needs.status.outputs.version }}
