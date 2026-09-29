@@ -347,8 +347,8 @@ jobs:
           EXE_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.unit_test_args }}
-        run: |
-          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
+        run: |        
+          & "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
 
       - name: Run test suite on the frozen app (folder)
         if: steps.win_onedir.outcome == 'success' && inputs.unit_tests == 'true'
@@ -360,7 +360,7 @@ jobs:
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.unit_test_args }}
         run: |
-          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
+          & "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS
 
       - name: Run integration test suite on the frozen app (file) # tests are more likely to fail in the one-file build than the one-dir build, so just run integration tests with the one-file build
         if: steps.win_onefile.outcome == 'success' && inputs.integration_tests == 'true'
@@ -372,7 +372,7 @@ jobs:
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.integration_test_args }}
         run: |
-          "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS --integration
+          & "$env:EXE_FILE" test --with-env-source "$env:ENV_SRC" $env:ARGS --integration
 
   macos:
     name: Build macOS Executables
