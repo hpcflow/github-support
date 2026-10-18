@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-app-data-cache
           path: ~/.cache/${{ inputs.executable_name }}
@@ -297,7 +297,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.win_onefile.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
@@ -306,7 +306,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-dir
@@ -314,7 +314,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.spec
@@ -322,7 +322,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.win_onefile.outcome == 'success' || steps.win_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win
@@ -461,7 +461,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.mac_onefile.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -470,7 +470,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-dir
@@ -478,7 +478,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS.spec
@@ -486,7 +486,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.mac_onefile.outcome == 'success' || steps.mac_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-macOS
@@ -696,7 +696,7 @@ jobs:
       - name: Upload executable artifact (file)
         id: upload-file
         if: steps.linux_onefile.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
           path: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
@@ -705,7 +705,7 @@ jobs:
       - name: Upload executable artifact (folder)
         id: upload-folder
         if: steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
           path: ${{ inputs.pyinstaller_dir }}/dist/onedir/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-dir
@@ -713,7 +713,7 @@ jobs:
 
       - name: Upload spec file
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
           path: ${{ inputs.pyinstaller_dir }}/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux.spec
@@ -721,7 +721,7 @@ jobs:
 
       - name: Upload build directory
         if: steps.linux_onefile.outcome == 'success' || steps.linux_onedir.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux-build
           path: ${{ inputs.pyinstaller_dir }}/build/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-linux
