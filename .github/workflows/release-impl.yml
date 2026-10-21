@@ -281,7 +281,7 @@ jobs:
       - name: Generate incremental CHANGELOG for GitHub release body (stable release)
         if: inputs.pr-base-ref == inputs.release_branch
         run: |
-          ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "$cur_tag..""
+          ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "$cur_tag.."
           cat CHANGELOG_increment.md
         env:
           cur_tag: ${{ steps.cur_tag.outputs.tag }}
