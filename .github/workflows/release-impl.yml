@@ -347,17 +347,32 @@ jobs:
         env:
           new_tag: ${{ steps.new_tag.outputs.tag }}
 
-      - name: Rebase into develop branch if exists (stable release)
+      - name: Sync release branch into develop branch if exists (stable release)
         if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
         run: |
           exists_in_remote=$(git ls-remote --heads origin "refs/heads/$PRE_BRANCH")
           echo "exists_in_remote: $exists_in_remote"
           if [[ -n $exists_in_remote ]]; then
             export SKIP=end-of-file-fixer
-            git checkout "$PRE_BRANCH"
-            git pull
-            git rebase "$BASE_BRANCH"
-            git push -u origin "$PRE_BRANCH"
+            # Merge rather than rebase: the pre-release branch may have gained
+            # commits (e.g. from a concurrent pre-release run) that are not on
+            # the release branch, and rewriting them would need a force-push.
+            for attempt in 1 2 3; do
+              git fetch origin "$PRE_BRANCH"
+              git checkout -B "$PRE_BRANCH" "origin/$PRE_BRANCH"
+              if git merge-base --is-ancestor HEAD "$BASE_BRANCH"; then
+                git merge --ff-only "$BASE_BRANCH"
+              else
+                echo "$PRE_BRANCH has commits not on $BASE_BRANCH; merging."
+                git merge --no-ff --no-edit -m "Merge branch '$BASE_BRANCH' into $PRE_BRANCH [skip ci]" "$BASE_BRANCH"
+              fi
+              if git push -u origin "$PRE_BRANCH"; then
+                exit 0
+              fi
+              echo "Push of $PRE_BRANCH rejected (attempt $attempt); retrying."
+              sleep 5
+            done
+            exit 1
           else
             echo "No $PRE_BRANCH branch to merge into."
           fi
@@ -950,17 +965,32 @@ jobs:
           BIN_LINKS: ${{ needs.release-github-PyPI.outputs.binary_download_links }}
           RECOVERY_TAG: ${{ inputs.recovery-tag }}
 
-      - name: Rebase into develop branch if exists (stable release)
+      - name: Sync release branch into develop branch if exists (stable release)
         if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
         run: |
           exists_in_remote=$(git ls-remote --heads origin "refs/heads/$PRE_BRANCH")
           echo "exists_in_remote: $exists_in_remote"
           if [[ -n $exists_in_remote ]]; then
             export SKIP=end-of-file-fixer
-            git checkout "$PRE_BRANCH"
-            git pull
-            git rebase "$BASE_BRANCH"
-            git push -u origin "$PRE_BRANCH"
+            # Merge rather than rebase: the pre-release branch may have gained
+            # commits (e.g. from a concurrent pre-release run) that are not on
+            # the release branch, and rewriting them would need a force-push.
+            for attempt in 1 2 3; do
+              git fetch origin "$PRE_BRANCH"
+              git checkout -B "$PRE_BRANCH" "origin/$PRE_BRANCH"
+              if git merge-base --is-ancestor HEAD "$BASE_BRANCH"; then
+                git merge --ff-only "$BASE_BRANCH"
+              else
+                echo "$PRE_BRANCH has commits not on $BASE_BRANCH; merging."
+                git merge --no-ff --no-edit -m "Merge branch '$BASE_BRANCH' into $PRE_BRANCH [skip ci]" "$BASE_BRANCH"
+              fi
+              if git push -u origin "$PRE_BRANCH"; then
+                exit 0
+              fi
+              echo "Push of $PRE_BRANCH rejected (attempt $attempt); retrying."
+              sleep 5
+            done
+            exit 1
           else
             echo "No $PRE_BRANCH branch to merge into."
           fi

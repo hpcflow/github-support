@@ -17,6 +17,16 @@ jobs:
 > [!CAUTION]
 > These workflows **must** be placed in this folder in order to function correctly.
 
+## Syncing the pre-release branch after a stable release
+
+After a stable release pushes its version commit, and again after the binary
+links commit, `release-impl.yml` syncs the stable branch into the pre-release
+branch. It fast-forwards when possible. Otherwise, for example when a concurrent
+pre-release run pushed a commit after the release PR was merged, it creates a
+`[skip ci]` merge commit instead of rebasing, so no force-push is needed. A
+rejected push is retried up to three times; merge conflicts fail the step without
+updating the pre-release branch.
+
 ## Recovering a partially completed release
 
 The `release-impl.yml` workflow pushes the version commit and tag before generating
@@ -57,7 +67,8 @@ It generates the `CHANGELOG_increment` artifact with only the two selected tags
 visible to git-chglog and requests the recovery tag alone. This excludes the
 previous release and combines changes across intervening prereleases, without
 deleting any tags. It then runs the existing build/publish jobs. Version bumping,
-tag creation, application repository pushes, and branch rebases are skipped.
+tag creation, application repository pushes, and pre-release branch syncs are
+skipped. Sync the pre-release branch with the stable branch separately if needed.
 Binary links are written only to the documentation build checkout; the website
 repository is still updated, including the stable documentation symlink.
 
