@@ -124,6 +124,16 @@ on:
         type: string
         required: false
         default: "2.1.3"
+      recovery-tag:
+        description: >
+          Existing stable release tag to publish without bumping versions or moving tags.
+          Only supported for workflow_dispatch, before GitHub or PyPI publication.
+        type: string
+        default: ""
+      recovery-previous-tag:
+        description: Previous stable release tag used as the exclusive release notes boundary.
+        type: string
+        default: ""
     secrets:
       general-token:
         description: >
@@ -161,13 +171,14 @@ on:
 
 jobs:
   bump-version:
-    # skip if trying to re-run; PR is closed without merging; '[skip release]' is in the PR title; or if merging any branch other than pre_release_branch into release_branch
-    if: inputs.gh-run-attempt == '1' && inputs.pr-merged == 'true' && !contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch)) && (!(github.event && github.event.pull_request) || github.event.pull_request.merged)
+    # Recovery requires manual dispatch. Normal releases skip reruns, unmerged PRs, and unrelated merges.
+    if: (inputs.recovery-tag != '' && github.event_name == 'workflow_dispatch') || (inputs.recovery-tag == '' && inputs.gh-run-attempt == '1' && inputs.pr-merged == 'true' && !contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch)) && (!(github.event && github.event.pull_request) || github.event.pull_request.merged))
     runs-on: ubuntu-latest
     outputs:
       new_tag: ${{ steps.new_tag.outputs.tag }}
       version: ${{ steps.new_tag.outputs.version }}
       changelog: ${{ steps.upload-changelog.outputs.artifact-url }}
+      source-ref: ${{ steps.recovery.outputs.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -175,14 +186,81 @@ jobs:
           fetch-depth: 0 # get all history and tags
           ref: ${{ inputs.pr-base-ref }}
           token: ${{ secrets.commit-token }}
-          persist-credentials: true
+          persist-credentials: ${{ inputs.recovery-tag == '' }}
           allow-unsafe-pr-checkout: true
       - name: Configure git
+        if: inputs.recovery-tag == ''
         uses: $/configure-git
       - name: Set up python ${{ inputs.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ inputs.python-version }}
+
+      - name: Set up poetry for recovery validation
+        if: inputs.recovery-tag != ''
+        uses: $/setup-poetry
+        with:
+          version: ${{ inputs.poetry-version }}
+
+      - name: Validate unpublished stable release for recovery
+        if: inputs.recovery-tag != ''
+        id: recovery
+        env:
+          TAG: ${{ inputs.recovery-tag }}
+          PREVIOUS_TAG: ${{ inputs.recovery-previous-tag }}
+          BASE_BRANCH: ${{ inputs.pr-base-ref }}
+          RELEASE_BRANCH: ${{ inputs.release_branch }}
+          REPOSITORY: ${{ inputs.repository }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+          PYPI_URL: ${{ inputs.pypi-url }}
+          GH_TOKEN: ${{ secrets.general-token }}
+          GH_API_URL: ${{ github.api_url }}
+        run: |
+          set -euo pipefail
+          if [[ "$BASE_BRANCH" != "$RELEASE_BRANCH" || "$REPOSITORY" != "$CALLER_REPOSITORY" ]]; then
+            echo "::error::Recovery must target the stable branch of the calling repository."
+            exit 1
+          fi
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ || ! "$PREVIOUS_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ || "$TAG" == "$PREVIOUS_TAG" ]]; then
+            echo "::error::Recovery requires two different stable tags of the form vX.Y.Z."
+            exit 1
+          fi
+          if [[ "$(printf '%s\n' "$PREVIOUS_TAG" "$TAG" | sort -V | head -n 1)" != "$PREVIOUS_TAG" ]]; then
+            echo "::error::The previous stable version must be lower than the recovery version."
+            exit 1
+          fi
+          sha=$(git rev-parse --verify "refs/tags/$TAG^{commit}")
+          previous_sha=$(git rev-parse --verify "refs/tags/$PREVIOUS_TAG^{commit}")
+          if [[ "$sha" == "$previous_sha" ]] || ! git merge-base --is-ancestor "$previous_sha" "$sha"; then
+            echo "::error::The previous stable tag must strictly precede the recovery tag."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$sha" "origin/$RELEASE_BRANCH"; then
+            echo "::error::The recovery tag must be on the stable release branch."
+            exit 1
+          fi
+          git checkout --detach "$sha"
+          package_version=$(poetry version)
+          read -r package version <<< "$package_version"
+          if [[ "$version" != "${TAG#v}" ]]; then
+            echo "::error::The package version does not match the recovery tag."
+            exit 1
+          fi
+          case "$PYPI_URL" in
+            https://upload.pypi.org/legacy/) index=https://pypi.org/pypi ;;
+            https://test.pypi.org/legacy/) index=https://test.pypi.org/pypi ;;
+            *) echo "::error::Recovery supports only PyPI and TestPyPI."; exit 1 ;;
+          esac
+          github_status=$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            "$GH_API_URL/repos/$REPOSITORY/releases/tags/$TAG")
+          pypi_status=$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' \
+            "$index/$package/$version/json")
+          if [[ "$github_status" != 404 || "$pypi_status" != 404 ]]; then
+            echo "::error::Recovery requires an unpublished version. GitHub HTTP: $github_status; PyPI HTTP: $pypi_status. Inspect existing publications or API errors before proceeding."
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       - name: Get git-chglog executable
         run: |
@@ -190,10 +268,11 @@ jobs:
           tar --extract --file git-chglog_0.15.0_linux_amd64.tar.gz git-chglog
 
       - name: Install commitizen
+        if: inputs.recovery-tag == ''
         run: pip install commitizen
 
       - name: Manipulate tags (stable release)
-        if: inputs.pr-base-ref == inputs.release_branch
+        if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
         id: pre_tag
         # delete all pre-release tags, set current version to the latest stable release,
         run: |
@@ -203,6 +282,7 @@ jobs:
           git tag -l | awk '/^(v[0-9]+\.[0-9]+\.[0-9]+(a|b|rc).*)$/ {print $1}' | xargs git tag -d
 
       - name: Get current tag
+        if: inputs.recovery-tag == ''
         id: cur_tag
         run: |
           CUR_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
@@ -210,11 +290,11 @@ jobs:
           echo "tag=$CUR_TAG" >> $GITHUB_OUTPUT
 
       - name: Commitizen bump (pre-release) # Bump version strings (pre-release) and add a new tag; commit
-        if: inputs.pr-base-ref == inputs.pre_release_branch
+        if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.pre_release_branch
         run: cz bump --prerelease alpha
 
       - name: Commitizen bump # First update version number to latest stable release, then bump to new stable release, add a new tag and commit
-        if: inputs.pr-base-ref == inputs.release_branch
+        if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
         run: |
           python3 -c '
           from commitizen.bump import update_version_in_files
@@ -235,23 +315,30 @@ jobs:
       - name: Get new tag
         id: new_tag
         run: |
-          NEW_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          if [[ -n "$RECOVERY_TAG" ]]; then
+            NEW_TAG="$RECOVERY_TAG"
+          else
+            NEW_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          fi
           echo "NEW_TAG is: $NEW_TAG"
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
           echo "version=${NEW_TAG:1}" >> $GITHUB_OUTPUT
+        env:
+          RECOVERY_TAG: ${{ inputs.recovery-tag }}
 
       - name: Generate CHANGELOG (stable release)
-        if: inputs.pr-base-ref == inputs.release_branch
+        if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
         run: |
           ./git-chglog --output CHANGELOG.md
           git add CHANGELOG.md
 
       - name: Generate CHANGELOG-dev (pre-release)
-        if: inputs.pr-base-ref == inputs.pre_release_branch
+        if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.pre_release_branch
         run: |
           ./git-chglog --output CHANGELOG-dev.md
           git add CHANGELOG-dev.md
       - name: Push new CHANGELOG
+        if: inputs.recovery-tag == ''
         run: |
           git tag -d $new_tag
           git commit --amend --no-edit
@@ -261,7 +348,7 @@ jobs:
           new_tag: ${{ steps.new_tag.outputs.tag }}
 
       - name: Rebase into develop branch if exists (stable release)
-        if: inputs.pr-base-ref == inputs.release_branch
+        if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
         run: |
           exists_in_remote=$(git ls-remote --heads origin "refs/heads/$PRE_BRANCH")
           echo "exists_in_remote: $exists_in_remote"
@@ -281,11 +368,19 @@ jobs:
       - name: Generate incremental CHANGELOG for GitHub release body (stable release)
         if: inputs.pr-base-ref == inputs.release_branch
         run: |
-          ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "$cur_tag..""
+          if [[ -n "$RECOVERY_TAG" ]]; then
+            tag_pattern="^(${PREVIOUS_TAG//./[.]}|${RECOVERY_TAG//./[.]})$"
+            ./git-chglog --tag-filter-pattern "$tag_pattern" --sort semver \
+              --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "$RECOVERY_TAG"
+          else
+            ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "$cur_tag.."
+          fi
           cat CHANGELOG_increment.md
         env:
           cur_tag: ${{ steps.cur_tag.outputs.tag }}
           new_tag: ${{ steps.new_tag.outputs.tag }}
+          RECOVERY_TAG: ${{ inputs.recovery-tag }}
+          PREVIOUS_TAG: ${{ inputs.recovery-previous-tag }}
 
       - name: Generate incremental CHANGELOG for GitHub release body (pre-release)
         if: inputs.pr-base-ref == inputs.pre_release_branch
@@ -303,6 +398,7 @@ jobs:
           path: CHANGELOG_increment.md
 
   cache-app-data:
+    needs: bump-version
     # skip if '[skip release]' is in the PR title; or if merging any branch other than pre_release_branch into release_branch
     if: "!contains(inputs.pr-title, '[skip release]') && (inputs.pr-base-ref == inputs.pre_release_branch || (inputs.pr-base-ref == inputs.release_branch && inputs.pr-head-ref == inputs.pre_release_branch)) && (!(github.event && github.event.pull_request) || github.event.pull_request.merged)"
     permissions:
@@ -313,7 +409,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.pr-base-ref }}
+          ref: ${{ needs.bump-version.outputs.source-ref || inputs.pr-base-ref }}
           allow-unsafe-pr-checkout: true
           persist-credentials: false
 
@@ -375,7 +471,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
+          ref: ${{ needs.bump-version.outputs.source-ref || inputs.pr-base-ref }} # use the validated commit during recovery
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
@@ -527,7 +623,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
+          ref: ${{ needs.bump-version.outputs.source-ref || inputs.pr-base-ref }} # use the validated commit during recovery
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Cache dependencies
@@ -640,7 +736,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ needs.bump-version.outputs.source-ref || github.ref }}
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
@@ -692,6 +788,7 @@ jobs:
 
   make-workflow-benchmark-upload:
     needs:
+      - bump-version
       - make-workflow-benchmark
       - cleanup-cache
     runs-on: ubuntu-latest
@@ -701,7 +798,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ needs.bump-version.outputs.source-ref || github.ref }}
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Make benchmark directory
@@ -739,7 +836,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
+          ref: ${{ needs.bump-version.outputs.source-ref || inputs.pr-base-ref }} # use the validated commit during recovery
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Set up python ${{ inputs.python-version }}
@@ -819,16 +916,16 @@ jobs:
           TOKEN: ${{ secrets.pypi-token }}
 
   build-documentation:
-    needs: release-github-PyPI
+    needs: [bump-version, release-github-PyPI]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # get all history and tags
-          ref: ${{ inputs.pr-base-ref }} # otherwise we get the ref when the workflow started (missing above commit)
+          ref: ${{ needs.bump-version.outputs.source-ref || inputs.pr-base-ref }} # use the validated commit during recovery
           token: ${{ secrets.commit-token }}
-          persist-credentials: true
+          persist-credentials: ${{ inputs.recovery-tag == '' }}
           allow-unsafe-pr-checkout: true
 
       - name: Configure git
@@ -842,14 +939,17 @@ jobs:
       - name: Write binary links YAML file and push
         run: |
           echo -e "$BIN_LINKS" > docs/source/released_binaries.yml
-          git add .
-          git commit -m "build: update binary download links file [skip ci]"
-          git push
+          if [[ -z "$RECOVERY_TAG" ]]; then
+            git add .
+            git commit -m "build: update binary download links file [skip ci]"
+            git push
+          fi
         env:
           BIN_LINKS: ${{ needs.release-github-PyPI.outputs.binary_download_links }}
+          RECOVERY_TAG: ${{ inputs.recovery-tag }}
 
       - name: Rebase into develop branch if exists (stable release)
-        if: inputs.pr-base-ref == inputs.release_branch
+        if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
         run: |
           exists_in_remote=$(git ls-remote --heads origin "refs/heads/$PRE_BRANCH")
           echo "exists_in_remote: $exists_in_remote"
@@ -937,10 +1037,10 @@ jobs:
 
       - name: Update doc version switcher
         run: |
-          curl "$URL" --output docs/make_vers_switcher.py
+          curl --fail --show-error --location "$URL" --output docs/make_vers_switcher.py
           python docs/make_vers_switcher.py "$DOC_PREFIX"
         env:
-          URL: https://raw.githubusercontent.com/${{ inputs.repository }}/${{ github.ref_name }}/docs/make_vers_switcher.py
+          URL: https://raw.githubusercontent.com/${{ inputs.repository }}/${{ needs.bump-version.outputs.source-ref || github.ref_name }}/docs/make_vers_switcher.py
           DOC_PREFIX: ${{ inputs.docs_url_prefix }}
 
       - name: Push changes
