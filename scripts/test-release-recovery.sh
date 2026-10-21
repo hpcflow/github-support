@@ -3,6 +3,14 @@ set -euo pipefail
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 workflow="$root/.github/workflows/release-impl.yml"
+cache_step=$(awk '
+  /^      - name: Cache all app data and programs$/ { found = 1; next }
+  found && /^      - name:/ { exit }
+  found { print }
+' "$workflow")
+grep -qF 'FSSPEC_GITHUB_USERNAME: x-access-token' <<< "$cache_step"
+grep -qF 'FSSPEC_GITHUB_TOKEN: ${{ secrets.general-token }}' <<< "$cache_step"
+printf 'PASS: app data caching configures authenticated fsspec GitHub access\n'
 tmp=$(mktemp -d)
 trap 'rm -r -- "$tmp"' EXIT
 

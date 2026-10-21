@@ -65,3 +65,9 @@ Recovery can be rerun if it fails **before publication**. If either GitHub or Py
 already has the version, inspect that publication and finish the remaining work
 separately; the preflight will refuse another recovery run. Do not delete a
 publication merely to bypass this safeguard.
+
+The app-data caching step authenticates GitHub downloads using
+`FSSPEC_GITHUB_USERNAME` and `FSSPEC_GITHUB_TOKEN` with the caller's
+`general-token`. This avoids the shared runner IP's unauthenticated API quota.
+Using `GH_TOKEN` alone is insufficient for application versions that only read it
+while running tests.

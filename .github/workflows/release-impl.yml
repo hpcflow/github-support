@@ -438,6 +438,8 @@ jobs:
           poetry run "$EXE_NAME" manage cache-all
         env:
           EXE_NAME: ${{ inputs.executable_name }}
+          FSSPEC_GITHUB_USERNAME: x-access-token
+          FSSPEC_GITHUB_TOKEN: ${{ secrets.general-token }}
 
       - name: Upload all cached app data/programs
         id: upload-cached-app-data
