@@ -6,12 +6,14 @@ on:
       - .github/workflows/release-impl.yml
       - .github/workflows/test-release-recovery.yml
       - scripts/test-release-recovery.sh
+      - scripts/test-release-develop-sync.sh
   push:
     branches: [main]
     paths:
       - .github/workflows/release-impl.yml
       - .github/workflows/test-release-recovery.yml
       - scripts/test-release-recovery.sh
+      - scripts/test-release-develop-sync.sh
 
 permissions:
   contents: read
@@ -25,3 +27,5 @@ jobs:
           persist-credentials: false
       - name: Test recovery validation and release notes
         run: bash scripts/test-release-recovery.sh
+      - name: Test stable release develop branch sync
+        run: bash scripts/test-release-develop-sync.sh
