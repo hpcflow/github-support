@@ -24,7 +24,8 @@ the incremental release notes. A failure after that push does not roll back thos
 changes. Check the remote branch, tag, GitHub release, and PyPI version before
 attempting recovery.
 
-The `bump-version` job deliberately skips reruns (`gh-run-attempt != '1'`), so
+In normal release mode, the `bump-version` job deliberately skips reruns
+(`gh-run-attempt != '1'`), so
 rerunning a failed release cannot regenerate missing release notes or restart its
 dependent publishing jobs. Rerunning also does not necessarily load a newer
 revision of the reusable workflow.
@@ -34,20 +35,33 @@ If the release tag exists but publishing has not started:
 1. Fix the failing step in this repository before making another release.
 2. Keep the existing version commit and tag; do not delete or move a public tag,
    or run the version bump again to recover the same version.
-3. Prepare a separate, manually dispatched recovery workflow that checks out the
-   existing release tag, bypasses version/tag mutation, and supplies the original
-   `new_tag` and `version` outputs to the downstream jobs.
-4. Generate `CHANGELOG_increment.md` using the release template and the range
-   from the previous stable tag to the existing release tag, for example:
-   ```bash
-   ./git-chglog --template .chglog/RELEASE.tpl.md --output CHANGELOG_increment.md "v0.2.0..v0.3.0"
-   ```
-   Upload it as the `CHANGELOG_increment` artifact expected by the publishing job.
-5. Ensure all downstream checkouts use the existing release tag rather than a
-   branch that may have advanced. Build the required executable and benchmark
-   artifacts, then publish and update documentation through the remaining jobs.
+3. Call `release-impl.yml` from a `workflow_dispatch` workflow with `recovery-tag`
+   set to the existing stable tag (for example `v0.3.0`) and
+   `recovery-previous-tag` set to the previous stable tag (`v0.2.0`).
+   Pass the stable branch as `pr-base-ref` and the pre-release branch as
+   `pr-head-ref`, along with the usual application inputs and secrets.
+   Set `pr-merged` to `"false"`; recovery does not require a PR merge.
+4. Review and explicitly confirm publication in the caller before dispatching.
+   Use the same concurrency group as normal releases to prevent overlap.
 
-The recovery workflow described above is not currently provided by
-`release-impl.yml`; it must be prepared and reviewed before dispatch. If either
-GitHub or PyPI already has the version, inspect that publication before proceeding
-to avoid duplicate uploads or replacing existing release assets.
+Recovery validates that both tags exist, the previous tag strictly precedes the
+release tag, the release commit belongs to the stable branch, and its Poetry
+package version matches the tag. It supports stable `vX.Y.Z` tags and the
+production PyPI or TestPyPI upload URLs only. It rejects existing GitHub releases
+(including drafts visible to the token), existing PyPI versions, and API errors.
+It is not a general resume mechanism for partially published versions.
+
+After validation, recovery checks out the resolved release **commit SHA** for app
+data caching, executable builds, benchmarks, package builds, and documentation.
+It generates the `CHANGELOG_increment` artifact with only the two selected tags
+visible to git-chglog and requests the recovery tag alone. This excludes the
+previous release and combines changes across intervening prereleases, without
+deleting any tags. It then runs the existing build/publish jobs. Version bumping,
+tag creation, application repository pushes, and branch rebases are skipped.
+Binary links are written only to the documentation build checkout; the website
+repository is still updated, including the stable documentation symlink.
+
+Recovery can be rerun if it fails **before publication**. If either GitHub or PyPI
+already has the version, inspect that publication and finish the remaining work
+separately; the preflight will refuse another recovery run. Do not delete a
+publication merely to bypass this safeguard.
