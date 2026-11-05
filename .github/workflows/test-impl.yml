@@ -301,8 +301,13 @@ jobs:
           EXE_NAME: ${{ inputs.executable_name }}
           PYTEST_ARGS: ${{ inputs.pytest_args }}
           UT_ARGS: ${{ inputs.unit_test_args }}
+          SERVER_ADVERTISE_HOST: ${{ matrix.os == 'macos-latest' && '127.0.0.1' || '' }}
         run: |
-          poetry run "$EXE_NAME" test $PYTEST_ARGS $UT_ARGS
+          CONFIG_ARGS=()
+          if [[ -n "$SERVER_ADVERTISE_HOST" ]]; then
+            CONFIG_ARGS+=(--with-config server_advertise_host "$SERVER_ADVERTISE_HOST")
+          fi
+          poetry run "$EXE_NAME" "${CONFIG_ARGS[@]}" test $PYTEST_ARGS $UT_ARGS
 
   test-units-RockyLinux:
     needs: [pre-commit, cache-app-data]
