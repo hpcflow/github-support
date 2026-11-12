@@ -155,33 +155,21 @@ jobs:
     if: inputs.pre_commit == 'true'
     timeout-minutes: 2
     outputs:
-      platform-matrix: ${{ steps.platform.outputs.matrix }}
+      platform-matrix: ${{ steps.platform.outputs.result }}
     steps:
       - name: Compute platform matrix
         id: platform
-        run: |
-          if [ "$USE_WIN" = "true" ];
-            if [ "$USE_MAC" = "true" ];
-              echo "matrix=$M_BOTH" >> $GITHUB_OUTPUT
-            else
-              echo "matrix=$M_WIN" >> $GITHUB_OUTPUT
-            fi
-          else
-            if [ "$USE_MAC" = "true" ];
-              echo "matrix=$M_MAC" >> $GITHUB_OUTPUT
-            else
-              echo "matrix=$M_NONE" >> $GITHUB_OUTPUT
-            fi
-          fi
+        uses: actions/github-script@v9
+        with:
+          script: |
+            var platforms = [ "ubuntu-latest" ];
+            if (process.env.USE_MAC == "true")
+              platforms.push("macos-latest");
+            if (process.env.USE_WIN == "true")
+              platforms.push("windows-latest");
+            return JSON.stringify(platforms);
+          result-encoding: string
         env:
-          M_NONE: |
-            [ "ubuntu-latest" ]
-          M_WIN: |
-            [ "ubuntu-latest", "windows-latest" ]
-          M_MAC: |
-            [ "ubuntu-latest", "macos-latest" ]
-          M_BOTH: |
-            [ "ubuntu-latest", "macos-latest", "windows-latest" ]
           USE_MAC: ${{ inputs.test-macos }}
           USE_WIN: ${{ inputs.test-windows }}
       - name: Checkout
