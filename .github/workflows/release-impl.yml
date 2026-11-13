@@ -659,8 +659,6 @@ jobs:
         uses: $/run-in-docker
         with:
           options: |
-            -v ${{ github.workspace }}:/home
-            --env GH_TOKEN
             --env BUILT_EXE_PATH_FILE
             --env EXE_NAME
             --env PYINST_DIR
@@ -668,23 +666,20 @@ jobs:
             --env BUILT_EXE_PATH_DIR
             --env EXPECTED
           run: |
-            vers_expected="$EXPECTED"
+            set -e
 
             # set up poetry
-            cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev
 
             # build with pyinstaller for Rocky Linux (file)
-            cd "$PYINST_DIR"
-            ./make.sh "${BUILT_EXE_BASE_NAME}-linux" INFO onefile
-            cd ..
+            ( cd "$PYINST_DIR" && ./make.sh "${BUILT_EXE_BASE_NAME}-linux" INFO onefile )
 
             # version check (file)
             vers=$("$BUILT_EXE_PATH_FILE" --version)
             echo $vers
-            echo $vers_expected
-            [ "$vers" = "$vers_expected" ]
+            echo "$EXPECTED"
+            [ "$vers" = "$EXPECTED" ]
 
             # install cache data
             "$BUILT_EXE_PATH_FILE" data install-cache "${EXE_NAME}-app-data-cache/data"
@@ -696,25 +691,21 @@ jobs:
             "$BUILT_EXE_PATH_FILE" test
 
             # build with pyinstaller for Rocky Linux (folder)
-            cd "$PYINST_DIR"
-            ./make.sh "${BUILT_EXE_BASE_NAME}-linux-dir" INFO onedir
-            cd ..
+            ( cd "$PYINST_DIR" && ./make.sh "${BUILT_EXE_BASE_NAME}-linux-dir" INFO onedir )
 
             # version check (folder)
             vers=$("$BUILT_EXE_PATH_DIR" --version)
             echo $vers
-            echo $vers_expected
-            [ "$vers" = "$vers_expected" ]
+            echo "$EXPECTED"
+            [ "$vers" = "$EXPECTED" ]
 
             # run test suite on the frozen app (folder)
             "$BUILT_EXE_PATH_DIR" test
 
             # Compress folder (folder)
-            cd "$PYINST_DIR"
-            ./compress.sh "${BUILT_EXE_BASE_NAME}-linux-dir" 'onedir'
-            cd ..
+            ( cd "$PYINST_DIR" && ./compress.sh "${BUILT_EXE_BASE_NAME}-linux-dir" 'onedir' )
+          token: ${{ secrets.general-token }}
         env:
-          GH_TOKEN: ${{ secrets.general-token }}
           EXE_NAME: ${{ inputs.executable_name }}
           PYINST_DIR: ${{ inputs.pyinstaller_dir }}
           EXPECTED: "${{ inputs.app_name }}, version ${{ needs.bump-version.outputs.version }}"
