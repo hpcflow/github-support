@@ -379,7 +379,7 @@ jobs:
           EXE_FILE: ${{ inputs.pyinstaller_dir }}/dist/onefile/${{ inputs.executable_name }}-${{ needs.status.outputs.version }}-win.exe
           ENV_SRC: ${{ steps.configure_python_env.outputs.env_source_file }}
           ARGS: ${{ inputs.integration_test_args }}
-        run: |          
+        run: |
           $testArgs = @("test", "--with-env-source", "$env:ENV_SRC", "--integration")
           if (-not [string]::IsNullOrWhiteSpace($env:ARGS)) {
             $testArgs += $env:ARGS
@@ -578,12 +578,10 @@ jobs:
         uses: $/run-in-docker
         with:
           options: |
-            -v ${{ github.workspace }}:/home
             -u ${{ steps.user.outputs.user }}
             --env HOME=/home
             --env XDG_DATA_HOME=/home/.local/share
             --env XDG_CACHE_HOME=/home/.cache
-            --env GH_TOKEN
             --env UNIT_TESTS
             --env INTEGRATION_TESTS
             --env PYINST_DIR
@@ -596,7 +594,6 @@ jobs:
             set -e # exit on first failure
 
             # set up poetry
-            cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev
 
@@ -607,9 +604,7 @@ jobs:
             echo "ENV_SOURCE_FILE=${ENV_SOURCE_FILE}"
 
             # build with pyinstaller for Rocky Linux (file)
-            cd "$PYINST_DIR"
-            ./make.sh "${EXE_NAME}-${VER}-linux" "$LOG_LEVEL" onefile
-            cd ..
+            ( cd "$PYINST_DIR" && exec ./make.sh "${EXE_NAME}-${VER}-linux" "$LOG_LEVEL" onefile )
 
             # install cache data
             poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
@@ -630,7 +625,6 @@ jobs:
             fi
         env:
           PYINST_DIR: ${{ inputs.pyinstaller_dir }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UNIT_TESTS: ${{ inputs.unit_tests }}
           INTEGRATION_TESTS: ${{ inputs.integration_tests }}
           EXE_NAME: ${{ inputs.executable_name }}
@@ -646,8 +640,6 @@ jobs:
         uses: $/run-in-docker
         with:
           options: |
-            -v ${{ github.workspace }}:/home
-            --env GH_TOKEN
             --env UNIT_TESTS
             --env EXE_NAME
             --env LOG_LEVEL
@@ -658,7 +650,6 @@ jobs:
             set -e # exit on first failure
 
             # set up poetry
-            cd /home
             poetry config virtualenvs.in-project true
             poetry install --without dev
 
@@ -669,9 +660,7 @@ jobs:
             echo "ENV_SOURCE_FILE=${ENV_SOURCE_FILE}"
 
             # build with pyinstaller for Rocky Linux (folder)
-            cd "$PYINST_DIR"
-            ./make.sh "${EXE_NAME}-${VER}-linux-dir" "$LOG_LEVEL" onedir
-            cd ..
+            ( cd "$PYINST_DIR" && ./make.sh "${EXE_NAME}-${VER}-linux-dir" "$LOG_LEVEL" onedir )
 
             # install cache data
             poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
@@ -686,7 +675,6 @@ jobs:
             fi
         env:
           PYINST_DIR: ${{ inputs.pyinstaller_dir }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UNIT_TESTS: ${{ inputs.unit_tests }}
           EXE_NAME: ${{ inputs.executable_name }}
           LOG_LEVEL: ${{ inputs.logLevel }}

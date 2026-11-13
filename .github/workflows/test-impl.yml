@@ -350,12 +350,10 @@ jobs:
         uses: $/run-in-docker
         with:
           options: |
-            -v ${{ github.workspace }}:/home
-            --env GH_TOKEN
             --env EXE_NAME
             --env UT_ARGS
           run: |
-            cd /home
+            set -e
             poetry config virtualenvs.in-project true
             poetry install --without dev,pyinstaller
             poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
@@ -365,7 +363,6 @@ jobs:
             export PYTHONUNBUFFERED=ok
             poetry run "$EXE_NAME" test $UT_ARGS
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EXE_NAME: ${{ inputs.executable_name }}
           UT_ARGS: ${{ inputs.unit_test_args }}
         timeout-minutes: ${{ inputs.unit-test-timeout-minutes }}
@@ -466,12 +463,10 @@ jobs:
         uses: $/run-in-docker
         with:
           options: |
-            -v ${{ github.workspace }}:/home
-            --env GH_TOKEN
             --env EXE_NAME
             --env IT_ARGS
           run: |
-            cd /home
+            set -e
             poetry config virtualenvs.in-project true
             poetry install --without dev,pyinstaller
             poetry run "$EXE_NAME" data install-cache "${EXE_NAME}-app-data-cache/data"
@@ -481,7 +476,6 @@ jobs:
             export PYTHONUNBUFFERED=ok
             poetry run "$EXE_NAME" test --integration $IT_ARGS
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EXE_NAME: ${{ inputs.executable_name }}
           IT_ARGS: ${{ inputs.integration_test_args }}
         timeout-minutes: ${{ inputs.integration-test-timeout-minutes }}

@@ -7,12 +7,26 @@ inputs:
   run:
     description: The script to run in the container.
     required: true
+  image:
+    description: The Docker image to use.
+    default: ghcr.io/hpcflow/rockylinux8-python:latest
+  token:
+    description: The github.token.
+    default: ${{ github.token }}
+  workspace-dir:
+    description: >
+      Directory to mount the workspace inside the container.
+      This is the initial working directory for the script being run inside.
+    default: /home
 runs:
   using: composite
   steps:
     - shell: bash
       run: |
-        exec docker run $DockerOptions --entrypoint sh ghcr.io/hpcflow/rockylinux8-python:latest -c "$DockerRun"
+        exec docker run --env GH_TOKEN -v "$GITHUB_WORKSPACE:$Docker_Wd" $Docker_Options --entrypoint sh "$Docker_Image" -c "$Docker_Run" -w "$Docker_Wd"
       env:
-        DockerOptions: ${{ inputs.options }}
-        DockerRun: ${{ inputs.run }}
+        Docker_Image: ${{ inputs.image }}
+        Docker_Options: ${{ inputs.options }}
+        Docker_Run: ${{ inputs.run }}
+        Docker_Wd: ${{ inputs.workspace-dir }}
+        GH_TOKEN: ${{ inputs.token }}
