@@ -4,9 +4,11 @@ Miscellaneous support pieces for Github Actions.
 ## Actions
 
 Simple components that capture common patterns.
+* [`checkout-self`](checkout-self/) &mdash; Helper for reusable workflows to let them check out their helper files.
 * [`compare`](compare/) &mdash; Compare the output of a program against a string.
 * [`configure-git`](configure-git/) &mdash; Configures [git](https://git-scm.com/) for robotic commits.
-* [`init-cache`](init-cache/) &mdash; Set up dependency caching using a standard pattern. 
+* [`init-cache`](init-cache/) &mdash; Set up dependency caching using a standard pattern.
+* [`run-in-docker`](run-in-docker/) &mdash; Run a script inside a Rocky Linux Docker container.
 * [`setup-poetry`](setup-poetry/) &mdash; Set up [poetry](https://python-poetry.org/) for use.
 
 ## Component Workflows
