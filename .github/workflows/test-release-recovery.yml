@@ -3,17 +3,21 @@ name: Test release recovery
 on:
   pull_request:
     paths:
+      - .github/workflows/doc-build-impl.yml
       - .github/workflows/release-impl.yml
       - .github/workflows/test-release-recovery.yml
       - scripts/test-release-recovery.sh
       - scripts/test-release-develop-sync.sh
+      - scripts/test-doc-build.sh
   push:
     branches: [main]
     paths:
+      - .github/workflows/doc-build-impl.yml
       - .github/workflows/release-impl.yml
       - .github/workflows/test-release-recovery.yml
       - scripts/test-release-recovery.sh
       - scripts/test-release-develop-sync.sh
+      - scripts/test-doc-build.sh
 
 permissions:
   contents: read
@@ -29,3 +33,5 @@ jobs:
         run: bash scripts/test-release-recovery.sh
       - name: Test stable release develop branch sync
         run: bash scripts/test-release-develop-sync.sh
+      - name: Test shared documentation builds and cache lifetime
+        run: bash scripts/test-doc-build.sh

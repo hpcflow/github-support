@@ -420,6 +420,8 @@ jobs:
       # No write permission
       contents: read
     runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload-cached-app-data.outputs.artifact-id }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -793,21 +795,23 @@ jobs:
 
   cleanup-cache:
     needs:
+      - cache-app-data
       - build-executables
       - build-executables-linux
+      - build-documentation
+    if: ${{ always() && needs.cache-app-data.outputs.artifact-id != '' }}
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Delete cache artifact
         uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         with:
-          name: "*-app-data-cache"
-          failOnError: false
+          name: ${{ inputs.executable_name }}-app-data-cache
 
   make-workflow-benchmark-upload:
     needs:
       - bump-version
       - make-workflow-benchmark
-      - cleanup-cache
     runs-on: ubuntu-latest
     outputs:
       benchmark-url: ${{ steps.upload.outputs.artifact-url }}
@@ -824,6 +828,7 @@ jobs:
       - name: Load benchmark data
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
+          pattern: benchmark_make_workflow_*
           merge-multiple: true
           path: benchmarks
       - name: zip benchmark results
@@ -882,6 +887,7 @@ jobs:
       - name: Download release artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
+          pattern: "!*-app-data-cache"
           path: release-artifacts
 
       - name: Display structure of downloaded files
@@ -932,9 +938,11 @@ jobs:
           URL: ${{ inputs.pypi-url }}
           TOKEN: ${{ secrets.pypi-token }}
 
-  build-documentation:
+  prepare-documentation:
     needs: [bump-version, release-github-PyPI]
     runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.source.outputs.ref }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -948,11 +956,6 @@ jobs:
       - name: Configure git
         uses: $/configure-git
 
-      - name: Set up python ${{ inputs.python-version }}
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: ${{ inputs.python-version }}
-
       - name: Write binary links YAML file and push
         run: |
           echo -e "$BIN_LINKS" > docs/source/released_binaries.yml
@@ -964,6 +967,10 @@ jobs:
         env:
           BIN_LINKS: ${{ needs.release-github-PyPI.outputs.binary_download_links }}
           RECOVERY_TAG: ${{ inputs.recovery-tag }}
+
+      - name: Record documentation source commit
+        id: source
+        run: echo "ref=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Sync release branch into develop branch if exists (stable release)
         if: inputs.recovery-tag == '' && inputs.pr-base-ref == inputs.release_branch
@@ -998,30 +1005,21 @@ jobs:
           PRE_BRANCH: ${{ inputs.pre_release_branch }}
           BASE_BRANCH: ${{ inputs.release_branch }}
 
-      - name: Cache dependencies
-        uses: $/init-cache
-        with:
-          name: release-doc
-          version: ${{ inputs.python-version }}
-      - name: Set up poetry
-        uses: $/setup-poetry
-        with:
-          version: ${{ inputs.poetry-version }}
-
-      - name: Install dependencies
-        run: poetry install --without test,pyinstaller
-
-      - name: Build documentation with Sphinx
-        run: |
-          poetry run make clean
-          poetry run make html
-        working-directory: docs
-
-      - name: Upload documentation artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: docs_html
-          path: docs/build/html
+  build-documentation:
+    needs: [prepare-documentation, release-github-PyPI, cache-app-data]
+    permissions:
+      contents: read
+    uses: $/.github/workflows/doc-build-impl.yml
+    with:
+      ref: ${{ needs.prepare-documentation.outputs.ref }}
+      artifact-root-name: ${{ inputs.executable_name }}
+      artifact-name: docs_html
+      artifact-lifespan: 0
+      app-data-cache-name: ${{ inputs.executable_name }}-app-data-cache
+      binary-download-links: ${{ needs.release-github-PyPI.outputs.binary_download_links }}
+      python-version: ${{ inputs.python-version }}
+      poetry-version: ${{ inputs.poetry-version }}
+      install-args: --without test,pyinstaller
 
   update-website:
     needs: [bump-version, release-github-PyPI, build-documentation]

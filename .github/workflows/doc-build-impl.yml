@@ -1,4 +1,4 @@
-name: ⚙️ Documentation test build
+name: ⚙️ Documentation build
 
 on:
   workflow_call: # This is a component workflow
@@ -20,10 +20,27 @@ on:
         default: main
       artifact-root-name:
         description: >
-          Root name of the documentation artifact to produce.
+          Application CLI name and root name of the documentation artifact.
           Typically `hpcflow` or `matflow`.
         required: true
         type: string
+      app-data-cache-name:
+        description: >
+          Existing app-data artifact to consume instead of preparing one.
+          The caller must delete this artifact after all its consumers finish.
+        required: false
+        type: string
+        default: ""
+      artifact-name:
+        description: Override the documentation artifact name.
+        required: false
+        type: string
+        default: ""
+      binary-download-links:
+        description: Release binary links YAML to write into the docs checkout.
+        required: false
+        type: string
+        default: ""
       ref:
         description: >
           The SHA ID of the version to build.
@@ -41,7 +58,7 @@ on:
         required: false
         default: ""
       artifact-lifespan:
-        description: How long the artifact should be live for, in days.
+        description: Artifact retention in days, or 0 for the repository default.
         type: number
         required: false
         default: 7
@@ -62,9 +79,13 @@ on:
         type: string
         required: false
         default: github-pages
+    secrets:
+      general-token:
+        description: Token for authenticated app-data downloads; defaults to GITHUB_TOKEN.
+        required: false
     outputs:
       artifact-name:
-        description: The name of the generated artifact. Contains the commit ref ID.
+        description: The name of the generated documentation artifact.
         value: ${{ jobs.sphinx.outputs.artifact-name }}
       artifact-url:
         description: >
@@ -77,20 +98,73 @@ on:
         value: ${{ jobs.deploy.outputs.page-url }}
 
 jobs:
-  sphinx:
-    # Note that we only do this on one platform and with one Python version
+  cache-app-data:
+    if: ${{ inputs.app-data-cache-name == '' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
-      artifact-name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
-      artifact-url: ${{ steps.upload.outputs.artifact-url }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref }}
           persist-credentials: false
+      - name: Init Python ${{ inputs.python-version }}
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Install and configure poetry ${{ inputs.poetry-version }}
+        uses: $/setup-poetry
+        with:
+          version: ${{ inputs.poetry-version }}
+      - name: Cache Virtual Environment
+        uses: $/init-cache
+        with:
+          name: sphinx
+          version: ${{ inputs.python-version }}
+      - name: Install Dependencies
+        run: poetry install $Args
+        env:
+          Args: ${{ inputs.install-args }}
+      - name: Cache all app data and programs
+        run: poetry run "$EXE_NAME" manage cache-all
+        env:
+          EXE_NAME: ${{ inputs.artifact-root-name }}
+          FSSPEC_GITHUB_USERNAME: x-access-token
+          FSSPEC_GITHUB_TOKEN: ${{ secrets.general-token || github.token }}
+      - name: Upload all cached app data/programs
+        id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ inputs.artifact-root-name }}-docs-app-data-cache
+          path: ~/.cache/${{ inputs.artifact-root-name }}
+          if-no-files-found: error
+          retention-days: 1
+
+  sphinx:
+    needs: cache-app-data
+    if: ${{ !cancelled() && (needs.cache-app-data.result == 'success' || needs.cache-app-data.result == 'skipped') }}
+    # Note that we only do this on one platform and with one Python version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      artifact-name: ${{ inputs.artifact-name || format('{0}-documentation ({1})', inputs.artifact-root-name, inputs.ref) }}
+      artifact-url: ${{ steps.upload.outputs.artifact-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0 # Include release tags used by the documentation.
+          allow-unsafe-pr-checkout: true
+          persist-credentials: false
       - name: Checkout support code
         uses: $/checkout-self
+        with:
+          ref: ${{ inputs.script-branch }}
       - name: Init Python ${{ inputs.python-version }}
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
@@ -109,6 +183,25 @@ jobs:
           poetry install $Args
         env:
           Args: ${{ inputs.install-args }}
+      - name: Download prepared cached app data
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ inputs.app-data-cache-name || format('{0}-docs-app-data-cache', inputs.artifact-root-name) }}
+          path: app-data-cache
+      - name: Install cached app data
+        run: |
+          poetry run "$EXE_NAME" data install-cache app-data-cache/data
+          poetry run "$EXE_NAME" data --list
+          poetry run "$EXE_NAME" program install-cache app-data-cache/programs
+          poetry run "$EXE_NAME" program --list
+        env:
+          EXE_NAME: ${{ inputs.artifact-root-name }}
+          PYTHONUTF8: 1
+      - name: Write release binary links
+        if: ${{ inputs.binary-download-links != '' }}
+        run: printf '%s\n' "$BIN_LINKS" > docs/source/released_binaries.yml
+        env:
+          BIN_LINKS: ${{ inputs.binary-download-links }}
       - name: Configure Problem Matcher
         run: echo "::add-matcher::github-support/problem-matchers/sphinx.json"
         # See: https://github.com/actions/toolkit/blob/main/docs/problem-matchers.md
@@ -123,20 +216,29 @@ jobs:
         id: upload
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ${{ inputs.artifact-root-name }}-documentation (${{ inputs.ref }})
+          name: ${{ inputs.artifact-name || format('{0}-documentation ({1})', inputs.artifact-root-name, inputs.ref) }}
           path: docs/build/html
           if-no-files-found: error
-          retention-days: ${{ inputs.deploy && 1 || 7 }}
+          retention-days: ${{ inputs.deploy && 1 || inputs.artifact-lifespan }}
+
+  cleanup-cache:
+    needs: [cache-app-data, sphinx]
+    if: ${{ always() && needs.cache-app-data.outputs.artifact-id != '' }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Delete cache artifact
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
+        with:
+          name: ${{ inputs.artifact-root-name }}-docs-app-data-cache
 
   deploy:
     # New style doc uploader
     if: ${{ inputs.deploy }}
     needs: sphinx
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-      contents: read
+    # Inherit permissions so non-deploying callers need not grant Pages access.
+    # Deploying callers must grant pages: write and id-token: write.
     concurrency:
       group: pages
       cancel-in-progress: false
@@ -149,8 +251,8 @@ jobs:
       - name: Download documentation artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
+          name: ${{ needs.sphinx.outputs.artifact-name }}
           path: site
-          merge-multiple: true
       - name: Setup GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Upload artifact to documentation staging
