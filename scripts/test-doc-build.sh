@@ -32,8 +32,11 @@ done
 grep -qF 'always()' <<< "$cleanup"
 ! grep -q 'failOnError: false' <<< "$cleanup"
 ! extract_job "$release" make-workflow-benchmark-upload | grep -q cleanup-cache
-extract_job "$release" build-documentation | grep -qF 'uses: ./.github/workflows/doc-build-impl.yml'
-extract_job "$release" build-documentation | grep -q app-data-cache-name
+build_docs=$(extract_job "$release" build-documentation)
+grep -qF 'uses: $/.github/workflows/doc-build-impl.yml' <<< "$build_docs"
+grep -qx '    permissions:' <<< "$build_docs"
+grep -qx '      contents: read' <<< "$build_docs"
+grep -q app-data-cache-name <<< "$build_docs"
 extract_job "$release" release-github-PyPI | grep -qF 'pattern: "!*-app-data-cache"'
 extract_job "$release" make-workflow-benchmark-upload | grep -qF 'pattern: benchmark_make_workflow_*'
 printf 'PASS: release retains its cache for docs without including it in publication or benchmarks\n'

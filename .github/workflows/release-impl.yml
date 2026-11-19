@@ -1007,7 +1007,9 @@ jobs:
 
   build-documentation:
     needs: [prepare-documentation, release-github-PyPI, cache-app-data]
-    uses: ./.github/workflows/doc-build-impl.yml
+    permissions:
+      contents: read
+    uses: $/.github/workflows/doc-build-impl.yml
     with:
       ref: ${{ needs.prepare-documentation.outputs.ref }}
       artifact-root-name: ${{ inputs.executable_name }}

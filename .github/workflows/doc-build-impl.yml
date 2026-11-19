@@ -116,11 +116,11 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Install and configure poetry ${{ inputs.poetry-version }}
-        uses: hpcflow/github-support/setup-poetry@main
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache Virtual Environment
-        uses: hpcflow/github-support/init-cache@main
+        uses: $/init-cache
         with:
           name: sphinx
           version: ${{ inputs.python-version }}
@@ -162,7 +162,7 @@ jobs:
           allow-unsafe-pr-checkout: true
           persist-credentials: false
       - name: Checkout support code
-        uses: hpcflow/github-support/checkout-self@main
+        uses: $/checkout-self
         with:
           ref: ${{ inputs.script-branch }}
       - name: Init Python ${{ inputs.python-version }}
@@ -170,11 +170,11 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       - name: Install and configure poetry ${{ inputs.poetry-version }}
-        uses: hpcflow/github-support/setup-poetry@main
+        uses: $/setup-poetry
         with:
           version: ${{ inputs.poetry-version }}
       - name: Cache Virtual Environment
-        uses: hpcflow/github-support/init-cache@main
+        uses: $/init-cache
         with:
           name: sphinx
           version: ${{ inputs.python-version }}

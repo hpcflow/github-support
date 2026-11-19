@@ -49,7 +49,9 @@ and `artifact-lifespan` controls retention (one day when deploying).
 Release documentation keeps the repository's default artifact retention.
 The optional Pages deployment inherits the caller's permissions; callers enabling
 `deploy` must grant `pages: write` and `id-token: write`. Non-deploying callers do
-not need those permissions.
+not need those permissions. The release docs job grants only `contents: read`,
+and its self-repository workflow and action references use the release workflow's
+own revision.
 
 ## Syncing the pre-release branch after a stable release
 
