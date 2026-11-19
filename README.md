@@ -19,6 +19,9 @@ Implementations of templated workflows, separating the templating from what the 
 * [`build-exes-impl`](.github/workflows/build-exes-impl.yml) &mdash; Build executables.
   * No special permissions required.
 * [`doc-build-impl`](.github/workflows/doc-build-impl.yml) &mdash; Build documentation *for one version*.
+  * Shared by standalone and release builds; installs prepared app data before Sphinx.
+    Standalone builds delete their temporary cache artifact even after build failure.
+    Releases retain ownership of their cache and delete it after all consumers finish.
   * No special permissions required _if publication disabled_ (default).
   * If publication enabled, requires: `pages: write`, `id-token: write`  
     This is to allow publication of a site to be done.
